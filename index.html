@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>Capitol Defender</title>
+  <title>Capitol Defender+</title>
   <style>
     * {
       box-sizing: border-box;
@@ -454,17 +454,17 @@
       const e = candidates[Math.floor(Math.random() * candidates.length)];
       e.isDiving = true;
 
-      // aim roughly towards player, with gravity-ish curve
+      // aim directly toward player's current position
       const targetX = player.x + player.w / 2;
-      const targetY = player.y;
+      const targetY = player.y + player.h / 2;
 
       const dx = targetX - e.x;
       const dy = targetY - e.y;
 
-      const steps = 100; // frames-ish for base dive
+      const steps = 60; // frames-ish to reach player
       e.vx = dx / steps;
-      e.vy = dy / steps * 0.8;      // a bit shallower
-      e.diveSpeedY = 0.06 + Math.random() * 0.04; // gravity-ish
+      e.vy = dy / steps;                 // steeper dive than before
+      e.diveSpeedY = 0.10 + Math.random() * 0.05; // gravity-ish
 
       lastDiveTime = now;
     }
@@ -713,7 +713,7 @@
         }
 
         if (minX === Infinity) {
-          // all enemies diving or dead
+          // all enemies diving or dead, nothing to clamp
         } else if (minX <= 16 || maxX >= W - 16) {
           formationDir *= -1;
           formationOffsetX += enemyDx * formationDir; // small nudge back inside
@@ -750,6 +750,37 @@
         }
       }
       // --- end formation movement ---
+
+      // enemy sprite collision with player (mostly divers)
+      for (let i = enemies.length - 1; i >= 0; i--) {
+        const e = enemies[i];
+        if (!e.isDiving) continue;
+        if (
+          e.x < player.x + player.w &&
+          e.x + e.w > player.x &&
+          e.y < player.y + player.h &&
+          e.y + e.h > player.y
+        ) {
+          enemies.splice(i, 1);
+
+          if (now < upgrades.shieldUntil) {
+            upgrades.shieldUntil = 0;
+            spawnExplosion(player.x + player.w / 2, player.y + player.h / 2, "#80deea");
+            playSound("shieldBreak");
+            continue;
+          }
+
+          if (now > player.invincibleUntil) {
+            player.lives--;
+            player.invincibleUntil = now + 1500;
+            spawnExplosion(player.x + player.w / 2, player.y + player.h / 2, "#ffb74d");
+            playSound("hit");
+            if (player.lives <= 0) {
+              gameOver();
+            }
+          }
+        }
+      }
 
       // maybe launch a new dive
       tryStartDive(now);
