@@ -92,11 +92,12 @@
       enemyImages.push(img);
     }
 
-    // --- AUDIO ---
+    // --- AUDIO (SFX + music.mp3 mit Autoplay-Workaround) ---
 
     let audioCtx = null;          // SFX
     let muted = false;
     let bgMusic = null;           // music.mp3
+    let musicBlocked = false;     // ob Autoplay geblockt wurde
 
     function initSfxAudio() {
       try {
@@ -166,28 +167,46 @@
     }
 
     function startBackgroundMusic() {
-  try {
-    if (!bgMusic) {
-      bgMusic = new Audio("music.mp3");
-      bgMusic.loop = true;
-      bgMusic.volume = 0.4;
+      try {
+        if (!bgMusic) {
+          bgMusic = new Audio("music.mp3");
+          bgMusic.loop = true;
+          bgMusic.volume = 0.4;
+        }
+        if (muted) return;
+
+        bgMusic.play().catch(err => {
+          console.warn("Music autoplay blocked – will start after interaction", err);
+          musicBlocked = true;
+        });
+      } catch (e) {
+        console.error("Error starting music", e);
+      }
     }
-    bgMusic.play().catch(() => {
-      console.warn("Music autoplay blocked – will start after interaction");
-    });
-  } catch (e) {
-    console.error(e);
-  }
-}
 
     function updateMusicMuteState() {
       if (!bgMusic) return;
       if (muted) {
         bgMusic.pause();
       } else {
-        bgMusic.play().catch(() => {});
+        bgMusic.play().catch(err => {
+          console.warn("Music play failed after unmute", err);
+          musicBlocked = true;
+        });
       }
     }
+
+    function tryResumeMusic() {
+      if (!musicBlocked || !bgMusic || muted) return;
+      musicBlocked = false;
+      bgMusic.play().catch(err => {
+        console.warn("Music still blocked", err);
+        musicBlocked = true; // nochmal beim nächsten Input versuchen
+      });
+    }
+
+    window.addEventListener("click", tryResumeMusic);
+    window.addEventListener("keydown", tryResumeMusic);
 
     // --- PLAYER ---
     const player = {
@@ -494,7 +513,7 @@
     }
 
     // --- UPDATE ---
-    let lastTime = 0;   // nur HIER deklariert
+    let lastTime = 0;
 
     function update(dt) {
       if (state !== GAME_STATE.PLAYING) {
@@ -717,6 +736,7 @@
       if (img && img.complete) {
         ctx.drawImage(img, Math.round(player.x), Math.round(player.y), player.w, player.h);
       } else {
+        // Fallback-Sprite
         drawPixelRect(player.x, player.y + 5, player.w, player.h - 5, "#b71c1c");
         drawPixelRect(player.x + 5, player.y, 6, 5, "#f5d7b3");
         drawPixelRect(player.x + player.w / 2 - 1, player.y + 7, 2, 5, "#ff5252");
