@@ -1,111 +1,323 @@
 <!DOCTYPE html>
-<html lang="de">
+<html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>Dubya Button</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Pixel Invaders</title>
   <style>
-    body {
+    * {
+      box-sizing: border-box;
       margin: 0;
-      min-height: 100vh;
+      padding: 0;
+    }
+
+    body {
+      background: #050608;
+      color: #eee;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
       display: flex;
+      flex-direction: column;
       align-items: center;
       justify-content: center;
-      background: #111827;
-      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-      color: #e5e7eb;
+      height: 100vh;
     }
 
-    .wrapper {
+    canvas {
+      /* kleines „Pixel“-Canvas, hochskaliert */
+      image-rendering: pixelated;
+      image-rendering: crisp-edges;
+      border: 3px solid #444;
+      background: #000;
+      width: 480px;   /* 3x Skalierung */
+      height: 360px;  /* 3x Skalierung */
+    }
+
+    #info {
+      margin-top: 10px;
+      font-size: 14px;
       text-align: center;
+      color: #bbb;
     }
 
-    h1 {
-      margin-bottom: 1rem;
-      font-size: 1.5rem;
-    }
-
-    p {
-      margin-bottom: 1.5rem;
-      font-size: 0.95rem;
-      color: #9ca3af;
-    }
-
-    .bush-button {
-      border-radius: 999px;
-      overflow: hidden;
-      display: inline-block;
-      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.5);
-      cursor: pointer;
-      transform: translateY(0);
-      transition:
-        transform 0.15s ease,
-        box-shadow 0.15s ease,
-        filter 0.15s ease;
-    }
-
-    .bush-button img {
-      display: block;
-      width: 260px;
-      height: 260px;
-      object-fit: cover;
-    }
-
-    .bush-button:hover {
-      transform: translateY(-3px) scale(1.02);
-      box-shadow: 0 28px 60px rgba(0, 0, 0, 0.6);
-      filter: brightness(1.05);
-    }
-
-    .bush-button:active {
-      transform: translateY(1px) scale(0.98);
-      box-shadow: 0 12px 25px rgba(0, 0, 0, 0.5);
-      filter: brightness(0.98);
-    }
-
-    .hint {
-      margin-top: 0.75rem;
-      font-size: 0.85rem;
-      color: #6b7280;
+    #info strong {
+      color: #fff;
     }
   </style>
 </head>
 <body>
-  <div class="wrapper">
-    <h1>How come every internet address begins with Dubya</h1>
-    <p>Now watch this drive</p>
+  <canvas id="game" width="160" height="120"></canvas>
 
-    <!--
-      ERSETZE die Bilddatei 'bush.jpg' durch dein eigenes Bild.
-      Lege z. B. eine Datei 'bush.jpg' in den gleichen Ordner wie diese HTML-Datei.
-    -->
-    <div class="bush-button" id="bushButton">
-      <img src="https://cdn.britannica.com/78/73178-050-00309E51/George-W-Bush.jpg" alt="George W. Bush" />
-    </div>
-
-    <div class="hint">Hinweis: Die Sprachausgabe nutzt die eingebaute Sprachausgabe deines Geräts.</div>
+  <div id="info">
+    <strong>Controls:</strong> &larr;/&rarr; zum Bewegen, <strong>Space</strong> zum Schießen, <strong>R</strong> fürs Restart.
   </div>
 
   <script>
-    function speakDubya() {
-      if (!("speechSynthesis" in window)) {
-        alert("Dein Browser unterstützt leider keine Sprachausgabe. :(");
-        return;
+    const canvas = document.getElementById("game");
+    const ctx = canvas.getContext("2d");
+
+    const W = canvas.width;
+    const H = canvas.height;
+
+    // --- GAME STATE ---
+    let gameOver = false;
+    let win = false;
+    let score = 0;
+
+    // --- PLAYER (neutraler Kandidat) ---
+    const player = {
+      x: W / 2 - 4,
+      y: H - 14,
+      w: 8,
+      h: 8,
+      speed: 2,
+      canShoot: true,
+      shootCooldown: 250 // ms
+    };
+
+    // --- BULLETS ---
+    const bullets = [];
+
+    // --- ENEMIES (rote & blaue Politik-Pixel) ---
+    const enemies = [];
+    const enemyRows = 3;
+    const enemyCols = 7;
+    const enemySpacingX = 14;
+    const enemySpacingY = 12;
+    const enemyStartX = 10;
+    const enemyStartY = 15;
+
+    let enemyDx = 0.4;  // horizontale Geschwindigkeit
+    let enemyStepDown = 4;
+    let lastEnemyMoveTime = 0;
+
+    // --- INPUT ---
+    const keys = {};
+    window.addEventListener("keydown", (e) => {
+      keys[e.key] = true;
+
+      if (e.key === " " || e.code === "Space") {
+        tryShoot();
       }
 
-      // Falls gerade schon etwas gesprochen wird, zuerst stoppen
-      window.speechSynthesis.cancel();
+      if (gameOver && (e.key === "r" || e.key === "R")) {
+        restartGame();
+      }
+    });
 
-      const utterance = new SpeechSynthesisUtterance("Dubya");
-      // Optional: Sprache/Stimmlage anpassen
-      utterance.lang = "en-US";
-      utterance.rate = 1;
-      utterance.pitch = 1;
+    window.addEventListener("keyup", (e) => {
+      keys[e.key] = false;
+    });
 
-      window.speechSynthesis.speak(utterance);
+    // --- INITIAL ENEMY SETUP ---
+    function initEnemies() {
+      enemies.length = 0;
+      for (let row = 0; row < enemyRows; row++) {
+        for (let col = 0; col < enemyCols; col++) {
+          const x = enemyStartX + col * enemySpacingX;
+          const y = enemyStartY + row * enemySpacingY;
+          enemies.push({
+            x,
+            y,
+            w: 8,
+            h: 6,
+            type: row % 2 === 0 ? "red" : "blue" // abwechselnd rote / blaue
+          });
+        }
+      }
     }
 
-    document.getElementById("bushButton").addEventListener("click", speakDubya);
+    // --- SHOOTING ---
+    let lastShotTime = 0;
+
+    function tryShoot() {
+      const now = performance.now();
+      if (!player.canShoot) return;
+      if (now - lastShotTime < player.shootCooldown) return;
+
+      bullets.push({
+        x: player.x + player.w / 2 - 1,
+        y: player.y - 2,
+        w: 2,
+        h: 4,
+        dy: -2
+      });
+
+      lastShotTime = now;
+    }
+
+    // --- RESTART ---
+    function restartGame() {
+      gameOver = false;
+      win = false;
+      score = 0;
+      player.x = W / 2 - 4;
+      bullets.length = 0;
+      enemyDx = 0.4;
+      initEnemies();
+      lastTime = 0;
+      lastEnemyMoveTime = 0;
+      requestAnimationFrame(loop);
+    }
+
+    // --- UPDATE ---
+    let lastTime = 0;
+
+    function update(dt) {
+      if (gameOver) return;
+
+      // Player movement
+      if (keys["ArrowLeft"]) {
+        player.x -= player.speed;
+      }
+      if (keys["ArrowRight"]) {
+        player.x += player.speed;
+      }
+
+      // Boundaries
+      if (player.x < 2) player.x = 2;
+      if (player.x + player.w > W - 2) player.x = W - 2 - player.w;
+
+      // Bullets
+      for (let i = bullets.length - 1; i >= 0; i--) {
+        const b = bullets[i];
+        b.y += b.dy;
+        if (b.y + b.h < 0) {
+          bullets.splice(i, 1);
+        }
+      }
+
+      // Enemies horizontal + step down
+      const moveNow = performance.now();
+      if (moveNow - lastEnemyMoveTime > 20) {
+        let hitEdge = false;
+
+        for (const e of enemies) {
+          e.x += enemyDx;
+          if (e.x <= 2 || e.x + e.w >= W - 2) {
+            hitEdge = true;
+          }
+        }
+
+        if (hitEdge) {
+          // Richtungswechsel + runter
+          enemyDx = -enemyDx;
+          for (const e of enemies) {
+            e.y += enemyStepDown;
+            // Lose condition: Gegner zu weit unten
+            if (e.y + e.h >= player.y) {
+              gameOver = true;
+              win = false;
+            }
+          }
+        }
+
+        lastEnemyMoveTime = moveNow;
+      }
+
+      // Bullet vs Enemy collision
+      for (let i = bullets.length - 1; i >= 0; i--) {
+        const b = bullets[i];
+        for (let j = enemies.length - 1; j >= 0; j--) {
+          const e = enemies[j];
+          if (
+            b.x < e.x + e.w &&
+            b.x + b.w > e.x &&
+            b.y < e.y + e.h &&
+            b.y + b.h > e.y
+          ) {
+            // Hit
+            bullets.splice(i, 1);
+            enemies.splice(j, 1);
+            score += 10;
+            break;
+          }
+        }
+      }
+
+      // Win condition
+      if (enemies.length === 0 && !gameOver) {
+        gameOver = true;
+        win = true;
+      }
+    }
+
+    // --- DRAW HELPERS (Pixel-Stil) ---
+    function drawPixelRect(x, y, w, h, color) {
+      ctx.fillStyle = color;
+      ctx.fillRect(Math.round(x), Math.round(y), w, h);
+    }
+
+    function drawPlayer() {
+      // kleiner „Kandidat“ in Grau mit hellem Kopf
+      drawPixelRect(player.x, player.y + 2, player.w, player.h - 2, "#999");
+      drawPixelRect(player.x + 2, player.y, 4, 2, "#ddd");
+    }
+
+    function drawEnemies() {
+      for (const e of enemies) {
+        const bodyColor = e.type === "red" ? "#d32f2f" : "#1976d2";
+        const faceColor = "#ffeb3b";
+
+        // Körper
+        drawPixelRect(e.x, e.y + 2, e.w, e.h - 2, bodyColor);
+        // Kopf
+        drawPixelRect(e.x + 2, e.y, e.w - 4, 2, faceColor);
+      }
+    }
+
+    function drawBullets() {
+      for (const b of bullets) {
+        drawPixelRect(b.x, b.y, b.w, b.h, "#fff");
+      }
+    }
+
+    function drawHUD() {
+      ctx.fillStyle = "#fff";
+      ctx.font = "6px monospace";
+      ctx.fillText("SCORE: " + score, 4, 8);
+    }
+
+    function drawGameOver() {
+      ctx.fillStyle = "rgba(0,0,0,0.7)";
+      ctx.fillRect(0, 0, W, H);
+
+      ctx.fillStyle = "#fff";
+      ctx.font = "10px monospace";
+      ctx.textAlign = "center";
+      ctx.fillText(win ? "YOU WIN" : "GAME OVER", W / 2, H / 2 - 4);
+      ctx.font = "6px monospace";
+      ctx.fillText("Score: " + score, W / 2, H / 2 + 4);
+      ctx.fillText("Press R to restart", W / 2, H / 2 + 12);
+      ctx.textAlign = "start";
+    }
+
+    // --- MAIN LOOP ---
+    function loop(timestamp) {
+      if (!lastTime) lastTime = timestamp;
+      const dt = timestamp - lastTime;
+      lastTime = timestamp;
+
+      // Clear
+      ctx.clearRect(0, 0, W, H);
+
+      // Update
+      update(dt);
+
+      // Draw
+      drawEnemies();
+      drawPlayer();
+      drawBullets();
+      drawHUD();
+
+      if (gameOver) {
+        drawGameOver();
+      } else {
+        requestAnimationFrame(loop);
+      }
+    }
+
+    // --- START ---
+    initEnemies();
+    requestAnimationFrame(loop);
   </script>
 </body>
 </html>
