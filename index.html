@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>Pixel Invaders Deluxe</title>
+  <title>Capitol Defender – Pixel Invaders</title>
   <style>
     * {
       box-sizing: border-box;
@@ -98,7 +98,6 @@
       osc.connect(gain);
       gain.connect(audioCtx.destination);
 
-      // Defaults
       osc.type = "square";
       let duration = 0.12;
 
@@ -139,7 +138,7 @@
       osc.stop(now + duration);
     }
 
-    // --- PLAYER ---
+    // --- PLAYER (roter Reformer, republikanisch inspiriert) ---
     const player = {
       x: W / 2 - 5,
       y: H - 16,
@@ -161,17 +160,17 @@
     let level = 1;
     let score = 0;
 
-    const bullets = [];       // player bullets
-    const enemyBullets = [];  // enemy bullets
+    const bullets = [];
+    const enemyBullets = [];
     const enemies = [];
-    const particles = [];     // explosion particles
-    const powerups = [];      // falling upgrades
+    const particles = [];
+    const powerups = [];
 
-    let enemyDx = 0.4;        // horizontal speed
+    let enemyDx = 0.4;
     let enemyStepDown = 4;
     let lastEnemyMoveTime = 0;
 
-    let enemyShootInterval = 1200; // ms
+    let enemyShootInterval = 1200;
     let lastEnemyShotTime = 0;
 
     const keys = {};
@@ -201,7 +200,7 @@
       keys[e.key] = false;
     });
 
-    // --- INITIAL ENEMIES ---
+    // --- INITIAL ENEMIES: blaue Bürokratie-Blöcke ---
     function initEnemiesForLevel() {
       enemies.length = 0;
 
@@ -221,7 +220,7 @@
             y,
             w: 9,
             h: 7,
-            type: (row + col) % 2 === 0 ? "red" : "blue",
+            type: "blue", // alle Gegner = blaue Bürokratie
           });
         }
       }
@@ -233,7 +232,7 @@
 
     // --- POWERUPS ---
     function spawnPowerup(x, y) {
-      const overallChance = 0.25; // 25% Chance überhaupt eins zu droppen
+      const overallChance = 0.25;
       if (Math.random() > overallChance) return;
 
       let type;
@@ -254,11 +253,11 @@
 
     function applyPowerup(type, now) {
       if (type === "rapid") {
-        upgrades.rapidUntil = now + 8000; // 8s
+        upgrades.rapidUntil = now + 8000;
       } else if (type === "double") {
         upgrades.doubleUntil = now + 8000;
       } else if (type === "shield") {
-        upgrades.shieldUntil = now + 10000; // 10s
+        upgrades.shieldUntil = now + 10000;
       }
       playSound("powerup");
     }
@@ -273,7 +272,7 @@
           y,
           dx: Math.cos(angle) * speed,
           dy: Math.sin(angle) * speed,
-          life: 400, // ms
+          life: 400,
           age: 0,
           color,
         });
@@ -381,7 +380,6 @@
       powerups.length = 0;
       upgrades.rapidUntil = 0;
       upgrades.doubleUntil = 0;
-      // Shield lassen wir, wenn es noch läuft
       initEnemiesForLevel();
       lastEnemyMoveTime = 0;
       lastEnemyShotTime = 0;
@@ -473,7 +471,7 @@
             b.y < e.y + e.h &&
             b.y + b.h > e.y
           ) {
-            spawnExplosion(e.x + e.w / 2, e.y + e.h / 2, e.type === "red" ? "#ff5252" : "#64b5f6");
+            spawnExplosion(e.x + e.w / 2, e.y + e.h / 2, "#64b5f6");
             spawnPowerup(e.x, e.y);
             enemies.splice(j, 1);
             bullets.splice(i, 1);
@@ -497,7 +495,6 @@
         ) {
           enemyBullets.splice(i, 1);
 
-          // Shield aktiv?
           if (now < upgrades.shieldUntil) {
             upgrades.shieldUntil = 0;
             spawnExplosion(player.x + player.w / 2, player.y + player.h / 2, "#80deea");
@@ -517,7 +514,7 @@
         }
       }
 
-      // Powerups updaten
+      // Powerups
       for (let i = powerups.length - 1; i >= 0; i--) {
         const p = powerups[i];
         p.y += p.dy;
@@ -526,7 +523,6 @@
           continue;
         }
 
-        // Kollisionscheck mit Player
         if (
           p.x < player.x + player.w &&
           p.x + p.w > player.x &&
@@ -544,7 +540,6 @@
         p.x += p.dx;
         p.y += p.dy;
         p.age += dt;
-        // leichte "Gravitation"
         p.dy += 0.01;
         if (p.age > p.life) {
           particles.splice(i, 1);
@@ -570,36 +565,31 @@
       const now = performance.now();
       const flashing = now < player.invincibleUntil && Math.floor(now / 100) % 2 === 0;
 
-      // Shield Aura
       if (now < upgrades.shieldUntil) {
         drawPixelRect(player.x - 2, player.y - 2, player.w + 4, player.h + 4, "#80deea", 0.25);
       }
 
       if (flashing) return;
 
-      // Körper (Anzug)
-      drawPixelRect(player.x, player.y + 3, player.w, player.h - 3, "#777");
+      // Körper in rot-grau (konservativer Reformer)
+      drawPixelRect(player.x, player.y + 3, player.w, player.h - 3, "#b71c1c");
       // Kopf
       drawPixelRect(player.x + 3, player.y, 4, 3, "#f5d7b3");
-      // Krawatte
-      drawPixelRect(player.x + player.w / 2 - 1, player.y + 4, 2, 3, "#e53935");
+      // Krawatte (hellrot)
+      drawPixelRect(player.x + player.w / 2 - 1, player.y + 4, 2, 3, "#ff5252");
       // Schultern
-      drawPixelRect(player.x + 1, player.y + 3, player.w - 2, 2, "#888");
+      drawPixelRect(player.x + 1, player.y + 3, player.w - 2, 2, "#d32f2f");
     }
 
     function drawEnemies() {
       for (const e of enemies) {
-        const bodyColor = e.type === "red" ? "#d32f2f" : "#1976d2";
+        const bodyColor = "#1976d2";  // blau = Bürokratie
         const faceColor = "#ffeb3b";
 
-        // Körper
         drawPixelRect(e.x, e.y + 3, e.w, e.h - 3, bodyColor);
-        // Kopf
         drawPixelRect(e.x + 2, e.y, e.w - 4, 3, faceColor);
-        // Augen
         drawPixelRect(e.x + 3, e.y + 1, 1, 1, "#000");
         drawPixelRect(e.x + e.w - 4, e.y + 1, 1, 1, "#000");
-        // Arme
         drawPixelRect(e.x - 1, e.y + 4, 2, 2, bodyColor);
         drawPixelRect(e.x + e.w - 1, e.y + 4, 2, 2, bodyColor);
       }
@@ -648,7 +638,9 @@
         drawPixelRect(92 + i * 6, 3, 4, 4, "#e53935");
       }
 
-      // Highscore & mute
+      // Side & Highscore
+      ctx.fillText("SIDE: RED", 4, 24);
+
       ctx.textAlign = "right";
       ctx.fillText("HI: " + highScore, W - 4, 8);
       ctx.fillText(muted ? "MUTE" : "SOUND", W - 4, 16);
@@ -656,36 +648,60 @@
 
       // Powerup-Status
       const now = performance.now();
-      ctx.fillText("PWR:", 4, 24);
+      ctx.fillText("PWR:", 4, 32);
 
       if (now < upgrades.rapidUntil) {
-        drawPixelRect(24, 20, 4, 4, "#ff9800");
+        drawPixelRect(24, 28, 4, 4, "#ff9800");
       }
       if (now < upgrades.doubleUntil) {
-        drawPixelRect(30, 20, 4, 4, "#ab47bc");
+        drawPixelRect(30, 28, 4, 4, "#ab47bc");
       }
       if (now < upgrades.shieldUntil) {
-        drawPixelRect(36, 20, 4, 4, "#80deea");
+        drawPixelRect(36, 28, 4, 4, "#80deea");
+      }
+    }
+
+    // kleines Flaggen-Background im Menü
+    function drawMenuBackground() {
+      // dunkler Hintergrund
+      drawPixelRect(0, 0, W, H, "#000");
+
+      // rote Streifen
+      for (let i = 0; i < 5; i++) {
+        drawPixelRect(0, 10 + i * 10, W, 4, "#b71c1c", 0.5);
+      }
+
+      // "Sternenfeld" links oben
+      drawPixelRect(5, 8, 45, 30, "#0d47a1", 0.7);
+      for (let r = 0; r < 4; r++) {
+        for (let c = 0; c < 6; c++) {
+          if ((r + c) % 2 === 0) {
+            drawPixelRect(8 + c * 6, 10 + r * 6, 2, 2, "#fff", 0.9);
+          }
+        }
       }
     }
 
     function drawMenu() {
       ctx.clearRect(0, 0, W, H);
-      ctx.fillStyle = "#000";
-      ctx.fillRect(0, 0, W, H);
+      drawMenuBackground();
 
       ctx.fillStyle = "#fff";
       ctx.textAlign = "center";
-      ctx.font = "12px monospace";
-      ctx.fillText("PIXEL INVADERS DELUXE", W / 2, 40);
+      ctx.font = "11px monospace";
+      ctx.fillText("CAPITOL DEFENDER", W / 2, 40);
 
       ctx.font = "6px monospace";
-      ctx.fillText("← / → : move", W / 2, 60);
-      ctx.fillText("SPACE : shoot", W / 2, 70);
-      ctx.fillText("ENTER : start", W / 2, 80);
-      ctx.fillText("M : mute/unmute", W / 2, 90);
+      ctx.fillText("Du spielst den roten Reformer", W / 2, 55);
+      ctx.fillText("(republikanisch inspiriert),", W / 2, 63);
+      ctx.fillText("der blaue Bürokratie-Blöcke stoppt.", W / 2, 71);
 
-      ctx.fillText("HIGH SCORE: " + highScore, W / 2, 105);
+      ctx.fillText("← / → : bewegen", W / 2, 88);
+      ctx.fillText("SPACE : schießen", W / 2, 96);
+      ctx.fillText("ENTER : Start", W / 2, 104);
+      ctx.fillText("M : Mute / Unmute", W / 2, 112);
+
+      ctx.fillText("HIGH SCORE: " + highScore, W / 2, 126);
 
       ctx.textAlign = "left";
     }
