@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>Capitol Defender – Ultimate HD</title>
+  <title>Capitol Defender – Custom</title>
   <style>
     * {
       box-sizing: border-box;
@@ -75,42 +75,44 @@
       highScore = 0;
     }
 
-    // --- PLAYER IMAGES ---
+    // --- IMAGES ---
+
+    // Player images (new names)
     const playerImgNormal = new Image();
     playerImgNormal.src = "player_normal.png";
+
     const playerImgShoot = new Image();
     playerImgShoot.src = "player_shooting.png";
 
-    // Audio
-    let audioCtx = null;
+    // Enemy images
+    const enemyImages = [];
+    for (let i = 1; i <= 5; i++) {
+      const img = new Image();
+      img.src = "enemy" + i + ".png";
+      enemyImages.push(img);
+    }
+
+    // --- AUDIO ---
+
+    let audioCtx = null;          // für SFX
     let muted = false;
+    let bgMusic = null;           // für deine music.mp3
 
-    // Background music (US anthem-ish chiptune)
-    let bgGain = null;
-    let bgMelodyTimeout = null;
-
-    function initAudio() {
+    function initSfxAudio() {
       try {
         if (!audioCtx) {
           const AC = window.AudioContext || window.webkitAudioContext;
           if (AC) audioCtx = new AC();
         }
-        if (audioCtx && !bgGain) {
-          bgGain = audioCtx.createGain();
-          bgGain.gain.value = muted ? 0 : 0.15;
-          bgGain.connect(audioCtx.destination);
-        }
       } catch (e) {
-        // if audio init fails, just skip sound
         audioCtx = null;
-        bgGain = null;
       }
     }
 
     function playSound(type) {
       if (muted) return;
       try {
-        initAudio();
+        initSfxAudio();
         if (!audioCtx) return;
 
         const now = audioCtx.currentTime;
@@ -159,79 +161,32 @@
         osc.start(now);
         osc.stop(now + duration);
       } catch (e) {
-        // ignore audio errors so the game keeps running
-      }
-    }
-
-    // Small anthem-like melody
-    const anthemMelody = [
-      { f: 392, d: 0.4 },
-      { f: 440, d: 0.4 },
-      { f: 494, d: 0.4 },
-      { f: 523, d: 0.8 },
-      { f: 0,   d: 0.2 },
-      { f: 523, d: 0.4 },
-      { f: 494, d: 0.4 },
-      { f: 440, d: 0.4 },
-      { f: 392, d: 0.8 },
-      { f: 0,   d: 0.3 },
-      { f: 440, d: 0.4 },
-      { f: 392, d: 0.6 },
-    ];
-
-    function scheduleAnthemLoop() {
-      try {
-        if (!audioCtx || !bgGain) return;
-
-        const startTime = audioCtx.currentTime + 0.1;
-        let t = startTime;
-
-        anthemMelody.forEach(note => {
-          if (!note.f) {
-            t += note.d;
-            return;
-          }
-          const osc = audioCtx.createOscillator();
-          const g = audioCtx.createGain();
-          osc.type = "square";
-          osc.frequency.setValueAtTime(note.f, t);
-          g.gain.setValueAtTime(1.0, t);
-          g.gain.exponentialRampToValueAtTime(0.001, t + note.d * 0.9);
-
-          osc.connect(g);
-          g.connect(bgGain);
-
-          osc.start(t);
-          osc.stop(t + note.d);
-          t += note.d;
-        });
-
-        const totalMs = (t - startTime) * 1000;
-        bgMelodyTimeout = setTimeout(() => {
-          if (!muted && state !== GAME_STATE.MENU) {
-            scheduleAnthemLoop();
-          }
-        }, totalMs + 200);
-      } catch (e) {
-        // if melody scheduling dies, just stop background music
-        if (bgMelodyTimeout) clearTimeout(bgMelodyTimeout);
-        bgMelodyTimeout = null;
+        // SFX kaputt? Dann halt leise, aber Spiel läuft weiter
       }
     }
 
     function startBackgroundMusic() {
       try {
-        initAudio();
-        if (!audioCtx || !bgGain) return;
-        if (bgMelodyTimeout) {
-          clearTimeout(bgMelodyTimeout);
-          bgMelodyTimeout = null;
+        if (!bgMusic) {
+          bgMusic = new Audio("music.mp3");
+          bgMusic.loop = true;
+          bgMusic.volume = 0.4;
         }
-        if (!muted && state !== GAME_STATE.MENU) {
-          scheduleAnthemLoop();
+        if (!muted && bgMusic.paused) {
+          bgMusic.currentTime = 0;
+          bgMusic.play().catch(() => {});
         }
       } catch (e) {
-        // ignore, game continues without bg music
+        // Wenn music.mp3 fehlt oder nicht spielbar ist → einfach ohne Musik
+      }
+    }
+
+    function updateMusicMuteState() {
+      if (!bgMusic) return;
+      if (muted) {
+        bgMusic.pause();
+      } else {
+        bgMusic.play().catch(() => {});
       }
     }
 
@@ -282,21 +237,11 @@
 
       if (e.key === "m" || e.key === "M") {
         muted = !muted;
-        try {
-          if (bgGain) {
-            bgGain.gain.value = muted ? 0 : 0.15;
-          }
-          if (!muted && state === GAME_STATE.PLAYING) {
-            startBackgroundMusic();
-          } else if (muted && bgMelodyTimeout) {
-            clearTimeout(bgMelodyTimeout);
-            bgMelodyTimeout = null;
-          }
-        } catch (_) {}
+        updateMusicMuteState();
         if (!muted) playSound("powerup");
       }
 
-      if (state === GAME_STATE.MENU && (e.key === "Enter")) {
+      if (state === GAME_STATE.MENU && e.key === "Enter") {
         startNewGame();
       }
 
@@ -354,7 +299,7 @@
             y,
             w: 14,
             h: 12,
-            type: "blue",
+            spriteIndex: Math.floor(Math.random() * enemyImages.length),
           });
         }
       }
@@ -522,7 +467,7 @@
       lastTime = 0;
       state = GAME_STATE.PLAYING;
       showLevelPopup();
-      startBackgroundMusic();
+      startBackgroundMusic(); // startet dein music.mp3
     }
 
     function startNextLevel() {
@@ -608,7 +553,7 @@
 
       enemyShoot();
 
-      // bullet vs enemy
+      // Bullet vs Enemy
       for (let i = bullets.length - 1; i >= 0; i--) {
         const b = bullets[i];
         let hit = false;
@@ -640,7 +585,7 @@
         if (hit && i >= bullets.length) continue;
       }
 
-      // enemy bullet vs player
+      // Enemy bullet vs Player
       for (let i = enemyBullets.length - 1; i >= 0; i--) {
         const eb = enemyBullets[i];
         if (
@@ -670,6 +615,7 @@
         }
       }
 
+      // Powerups
       for (let i = powerups.length - 1; i >= 0; i--) {
         const p = powerups[i];
         p.y += p.dy;
@@ -689,6 +635,7 @@
         }
       }
 
+      // Explosion-Particles
       for (let i = particles.length - 1; i >= 0; i--) {
         const p = particles[i];
         p.x += p.dx;
@@ -725,6 +672,7 @@
       ctx.restore();
     }
 
+    // Capitol-Hintergrund
     function drawCapitolBackground() {
       drawPixelRect(0, 0, W, H, "#020816");
       for (let i = 0; i < 35; i++) {
@@ -770,6 +718,7 @@
       if (img && img.complete) {
         ctx.drawImage(img, Math.round(player.x), Math.round(player.y), player.w, player.h);
       } else {
+        // Fallback Sprite
         drawPixelRect(player.x, player.y + 5, player.w, player.h - 5, "#b71c1c");
         drawPixelRect(player.x + 5, player.y, 6, 5, "#f5d7b3");
         drawPixelRect(player.x + player.w / 2 - 1, player.y + 7, 2, 5, "#ff5252");
@@ -779,15 +728,18 @@
 
     function drawEnemies() {
       for (const e of enemies) {
-        const bodyColor = "#1976d2";
-        const faceColor = "#ffeb3b";
-
-        drawPixelRect(e.x, e.y + 5, e.w, e.h - 5, bodyColor);
-        drawPixelRect(e.x + 3, e.y, e.w - 6, 5, faceColor);
-        drawPixelRect(e.x + 4, e.y + 2, 2, 2, "#000");
-        drawPixelRect(e.x + e.w - 6, e.y + 2, 2, 2, "#000");
-        drawPixelRect(e.x - 2, e.y + 7, 4, 4, bodyColor);
-        drawPixelRect(e.x + e.w - 2, e.y + 7, 4, 4, bodyColor);
+        const img = enemyImages[e.spriteIndex] || null;
+        if (img && img.complete) {
+          ctx.drawImage(img, Math.round(e.x), Math.round(e.y), e.w, e.h);
+        } else {
+          // Fallback: alte Pixel-Gegner
+          const bodyColor = "#1976d2";
+          const faceColor = "#ffeb3b";
+          drawPixelRect(e.x, e.y + 5, e.w, e.h - 5, bodyColor);
+          drawPixelRect(e.x + 3, e.y, e.w - 6, 5, faceColor);
+          drawPixelRect(e.x + 4, e.y + 2, 2, 2, "#000");
+          drawPixelRect(e.x + e.w - 6, e.y + 2, 2, 2, "#000");
+        }
       }
     }
 
@@ -976,6 +928,7 @@
     }
 
     // Start
+    let lastTime = 0;
     initEnemiesForLevel();
     requestAnimationFrame(loop);
   </script>
