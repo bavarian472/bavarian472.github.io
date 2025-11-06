@@ -209,12 +209,12 @@
     window.addEventListener("click", tryResumeMusic);
     window.addEventListener("keydown", tryResumeMusic);
 
-    // --- PLAYER (bigger) ---
+    // --- PLAYER (bit bigger) ---
     const player = {
-      w: 40,
-      h: 40,
-      x: W / 2 - 20,
-      y: H - 90,
+      w: 52,
+      h: 52,
+      x: W / 2 - 26,
+      y: H - 130,
       speed: 4,
       lives: 3,
       invincibleUntil: 0,
@@ -243,7 +243,7 @@
     const popups = [];
 
     let enemyDx = 0.6;
-    let enemyStepDown = 20;
+    let enemyStepDown = 24;
     let lastEnemyMoveTime = 0;
 
     let enemyShootInterval = 1200;
@@ -277,7 +277,7 @@
       keys[e.key] = false;
     });
 
-    // --- LEVEL TEXTS (now English) ---
+    // --- LEVEL TEXTS ---
     const levelMessages = {
       1: { title: "LEVEL 1 – FIRST FILIBUSTER", subtitle: "The first wave of blue paperwork is incoming." },
       2: { title: "LEVEL 2 – TAX STORM",        subtitle: "New taxes, more files – hold the line." },
@@ -298,15 +298,17 @@
       addPopup(msg.title, msg.subtitle, 2600);
     }
 
-    // --- ENEMIES ---
+    // --- ENEMIES (bit bigger + more spacing) ---
     function initEnemiesForLevel() {
       enemies.length = 0;
 
       const enemyRows = 3 + Math.min(level - 1, 2);
       const enemyCols = 9;
-      const enemySpacingX = 80;
-      const enemySpacingY = 60;
-      const enemyStartX = 80;
+      const enemyW = 52;
+      const enemyH = 52;
+      const enemySpacingX = 90;
+      const enemySpacingY = 70;
+      const enemyStartX = 70;
       const enemyStartY = 80;
 
       for (let row = 0; row < enemyRows; row++) {
@@ -316,8 +318,8 @@
           enemies.push({
             x,
             y,
-            w: 40,
-            h: 40,
+            w: enemyW,
+            h: enemyH,
             spriteIndex: Math.floor(Math.random() * enemyImages.length),
           });
         }
@@ -327,7 +329,7 @@
       enemyShootInterval = Math.max(450, 1200 - (level - 1) * 120);
     }
 
-    // --- POWERUPS (rarer) ---
+    // --- POWERUPS ---
     function spawnPowerup(x, y) {
       const overallChance = 0.12;
       if (Math.random() > overallChance) return;
@@ -343,7 +345,7 @@
       else type = "life";
 
       powerups.push({
-        x: x + 8,
+        x: x + 18,
         y,
         w: 16,
         h: 16,
@@ -420,17 +422,17 @@
       player.shootingUntil = now + 150;
 
       const bulletWidth = 4;
-      const bulletHeight = 14;
+      const bulletHeight = 16;
       const baseX = player.x + player.w / 2 - bulletWidth / 2;
       const startY = player.y - 6;
 
       if (spreadShot) {
         bullets.push({ x: baseX, y: startY, w: bulletWidth, h: bulletHeight, dx: 0,    dy: -6 });
-        bullets.push({ x: baseX, y: startY, w: bulletWidth, h: bulletHeight, dx: -1.6, dy: -5.2 });
-        bullets.push({ x: baseX, y: startY, w: bulletWidth, h: bulletHeight, dx: 1.6,  dy: -5.2 });
+        bullets.push({ x: baseX, y: startY, w: bulletWidth, h: bulletHeight, dx: -1.8, dy: -5.3 });
+        bullets.push({ x: baseX, y: startY, w: bulletWidth, h: bulletHeight, dx: 1.8,  dy: -5.3 });
       } else if (doubleShot) {
-        bullets.push({ x: player.x + 6,               y: startY, w: bulletWidth, h: bulletHeight, dx: 0, dy: -6 });
-        bullets.push({ x: player.x + player.w - 10,   y: startY, w: bulletWidth, h: bulletHeight, dx: 0, dy: -6 });
+        bullets.push({ x: player.x + 8,                 y: startY, w: bulletWidth, h: bulletHeight, dx: 0, dy: -6 });
+        bullets.push({ x: player.x + player.w - 12,     y: startY, w: bulletWidth, h: bulletHeight, dx: 0, dy: -6 });
       } else {
         bullets.push({ x: baseX, y: startY, w: bulletWidth, h: bulletHeight, dx: 0, dy: -6 });
       }
@@ -447,7 +449,7 @@
 
       const bottomEnemiesByCol = {};
       for (const e of enemies) {
-        const colKey = Math.round(e.x / 80);
+        const colKey = Math.round(e.x / 90); // match spacingX
         if (!bottomEnemiesByCol[colKey] || bottomEnemiesByCol[colKey].y < e.y) {
           bottomEnemiesByCol[colKey] = e;
         }
@@ -460,7 +462,7 @@
         x: shooter.x + shooter.w / 2 - 2,
         y: shooter.y + shooter.h,
         w: 4,
-        h: 14,
+        h: 16,
         dx: 0,
         dy: 3 + level * 0.3,
       });
@@ -543,14 +545,13 @@
         eb.y += eb.dy;
       }
 
-      // remove off-screen bullets
       for (let i = bullets.length - 1; i >= 0; i--) {
         const b = bullets[i];
-        if (b.y + b.h < 0 || b.x < -40 || b.x > W + 40) bullets.splice(i, 1);
+        if (b.y + b.h < 0 || b.x < -50 || b.x > W + 50) bullets.splice(i, 1);
       }
       for (let i = enemyBullets.length - 1; i >= 0; i--) {
         const eb = enemyBullets[i];
-        if (eb.y > H + 40) enemyBullets.splice(i, 1);
+        if (eb.y > H + 50) enemyBullets.splice(i, 1);
       }
 
       const moveNow = now;
@@ -714,9 +715,9 @@
       if (img && img.complete) {
         ctx.drawImage(img, Math.round(player.x), Math.round(player.y), player.w, player.h);
       } else {
-        drawPixelRect(player.x, player.y + 8, player.w, player.h - 8, "#b71c1c");
-        drawPixelRect(player.x + 10, player.y, 20, 8, "#f5d7b3");
-        drawPixelRect(player.x + player.w / 2 - 1, player.y + 10, 2, 8, "#ff5252");
+        drawPixelRect(player.x, player.y + 10, player.w, player.h - 10, "#b71c1c");
+        drawPixelRect(player.x + 12, player.y, 28, 10, "#f5d7b3");
+        drawPixelRect(player.x + player.w / 2 - 2, player.y + 12, 4, 10, "#ff5252");
       }
     }
 
@@ -726,8 +727,8 @@
         if (img && img.complete) {
           ctx.drawImage(img, Math.round(e.x), Math.round(e.y), e.w, e.h);
         } else {
-          drawPixelRect(e.x, e.y + 10, e.w, e.h - 10, "#1976d2");
-          drawPixelRect(e.x + 6, e.y, e.w - 12, 10, "#ffeb3b");
+          drawPixelRect(e.x, e.y + 12, e.w, e.h - 12, "#1976d2");
+          drawPixelRect(e.x + 8, e.y, e.w - 16, 12, "#ffeb3b");
         }
       }
     }
@@ -823,7 +824,6 @@
     function drawMenu() {
       drawBackground();
 
-      // dark strip for readability
       ctx.fillStyle = "rgba(0,0,0,0.5)";
       ctx.fillRect(0, 120, W, 260);
 
