@@ -21,35 +21,47 @@
       height: 100vh;
     }
 
-    /* Wrapper so we can place the GIF exactly over the canvas */
-#game-wrapper {
-  position: relative;
-  width: 1024px;
-  height: 724px;
-}
+    /* Wrapper to layer background, flag and canvas */
+    #game-wrapper {
+      position: relative;
+      width: 1024px;
+      height: 724px;
+    }
 
-#flagGif {
-  position: absolute;
-  width: 42px;
-  left: 50%;
-  transform: translateX(-50%);
-  top: 276px;
-  z-index: 0;            /* sits behind canvas */
-  pointer-events: none;
-}
+    /* Background image under everything */
+    #bgImage {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      z-index: 0;
+      pointer-events: none;
+    }
 
-canvas {
-  position: relative;
-  z-index: 1;            /* sits above the flag */
-  image-rendering: pixelated;
-  image-rendering: crisp-edges;
-  border: 3px solid #444;
-  background: #000;
-  width: 1024px;
-  height: 724px;
-  display: block;
-  cursor: pointer;
-}
+    /* Animated flag between background and canvas content */
+    #flagGif {
+      position: absolute;
+      width: 42px;                /* Größe der Flagge */
+      left: 50%;
+      transform: translateX(-50%);
+      top: 276px;                 /* Feinjustierung bei Bedarf */
+      z-index: 1;                 /* über Background, unter Canvas */
+      pointer-events: none;
+    }
+
+    canvas {
+      position: relative;
+      z-index: 2;                 /* on top of bg + flag */
+      image-rendering: pixelated;
+      image-rendering: crisp-edges;
+      border: 3px solid #444;
+      /* keine Hintergrundfarbe => transparent, damit bg/flag sichtbar */
+      background: transparent;
+      width: 1024px;
+      height: 724px;
+      display: block;
+      cursor: pointer;
+    }
 
     #info {
       margin-top: 10px;
@@ -65,9 +77,10 @@ canvas {
 </head>
 <body>
   <div id="game-wrapper">
-    <canvas id="game" width="1024" height="724"></canvas>
-    <!-- animated GIF on top of the canvas -->
+    <!-- Background and flag live under the canvas -->
+    <img id="bgImage" src="background.png" alt="Background">
     <img id="flagGif" src="flag.gif" alt="US Flag">
+    <canvas id="game" width="1024" height="724"></canvas>
   </div>
 
   <div id="info">
@@ -114,15 +127,18 @@ canvas {
       enemyImages.push(img);
     }
 
-    const backgroundImg = new Image();
-    backgroundImg.src = "background.png";
-
     const logoImg = new Image();
     logoImg.src = "logo.png";
 
+    // optional: backgroundImg wird nicht mehr zum Zeichnen genutzt,
+    // aber lassen wir drin falls du später noch was brauchst
+    const backgroundImg = new Image();
+    backgroundImg.src = "background.png";
+
     // --- AUDIO ---
 
-    const MUSIC_URL = "https://github.com/bavarian472/bavarian472.github.io/blob/main/music.mp3?raw=true";
+    const MUSIC_URL =
+      "https://github.com/bavarian472/bavarian472.github.io/blob/main/music.mp3?raw=true";
 
     let audioCtx = null;
     let muted = false;
@@ -311,8 +327,9 @@ canvas {
       const mouseX = e.clientX - rect.left;
       const mouseY = e.clientY - rect.top;
 
-      const logoW = 480;
-      const logoH = 240;
+      const logoW = 500;
+      const aspect = logoImg.naturalWidth / (logoImg.naturalHeight || 1);
+      const logoH = logoW / (aspect || 2);
       const logoX = W / 2 - logoW / 2;
       const logoY = H / 2 - logoH / 2 - 40;
 
@@ -498,7 +515,7 @@ canvas {
 
       const bottomEnemiesByCol = {};
       for (const e of enemies) {
-        const colKey = Math.round(e.x / 90); // match spacingX
+        const colKey = Math.round(e.x / 90);
         if (!bottomEnemiesByCol[colKey] || bottomEnemiesByCol[colKey].y < e.y) {
           bottomEnemiesByCol[colKey] = e;
         }
@@ -732,16 +749,9 @@ canvas {
     // --- DRAW HELPERS ---
 
     function drawBackground() {
-      if (backgroundImg.complete && backgroundImg.naturalWidth > 0) {
-        ctx.drawImage(backgroundImg, 0, 0, W, H);
-      } else {
-        ctx.fillStyle = "#020816";
-        ctx.fillRect(0, 0, W, H);
-      }
+      // canvas einfach leeren, Hintergrund/Flagge kommen aus HTML-Ebene
+      ctx.clearRect(0, 0, W, H);
     }
-
-    // old flag function now no-op (visual flag is handled by #flagGif)
-    function drawFlagOverlay() {}
 
     function drawPixelRect(x, y, w, h, color, alpha = 1) {
       ctx.save();
@@ -876,16 +886,12 @@ canvas {
     // --- MENU WITH LOGO ---
     function drawMenu() {
       drawBackground();
-      drawFlagOverlay(); // now no-op, visual flag is HTML overlay
 
-      // get logo's natural size and scale proportionally
-      let logoW = 480;
+      let logoW = 500;
       let logoH = 240;
-
       if (logoImg.complete && logoImg.naturalWidth > 0) {
         const aspect = logoImg.naturalWidth / logoImg.naturalHeight;
-        logoW = 500; // target width
-        logoH = logoW / aspect; // maintain ratio
+        logoH = logoW / aspect;
       }
 
       const logoX = W / 2 - logoW / 2;
@@ -894,14 +900,12 @@ canvas {
       if (logoImg.complete && logoImg.naturalWidth > 0) {
         ctx.drawImage(logoImg, logoX, logoY, logoW, logoH);
       } else {
-        // fallback text if logo not loaded
         ctx.fillStyle = "#fff";
         ctx.textAlign = "center";
         ctx.font = "32px monospace";
         ctx.fillText("CAPITOL DEFENDER", W / 2, H / 2);
       }
 
-      // hint box
       ctx.fillStyle = "rgba(0,0,0,0.6)";
       ctx.fillRect(W / 2 - 240, logoY + logoH + 30, 480, 70);
 
@@ -917,7 +921,6 @@ canvas {
 
     function drawGame() {
       drawBackground();
-      drawFlagOverlay(); // still no-op
       drawEnemies();
       drawEnemyBullets();
       drawBullets();
