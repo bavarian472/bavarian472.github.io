@@ -97,6 +97,10 @@
     const logoImg = new Image();
     logoImg.src = "logo.png";
 
+    // 🇺🇸 animated flag image
+    const flagImg = new Image();
+    flagImg.src = "flag.gif";
+
     // --- AUDIO ---
 
     const MUSIC_URL = "https://github.com/bavarian472/bavarian472.github.io/blob/main/music.mp3?raw=true";
@@ -717,6 +721,20 @@
       }
     }
 
+    // 🇺🇸 draw animated flag on top of the Capitol
+    function drawFlagOverlay() {
+      if (!flagImg.complete || flagImg.naturalWidth === 0) return;
+
+      const targetWidth = 42;
+      const aspect = flagImg.naturalHeight / flagImg.naturalWidth;
+      const targetHeight = targetWidth * aspect;
+
+      const x = W / 2 - targetWidth / 2;
+      const y = 276; // tweak slightly if it looks off
+
+      ctx.drawImage(flagImg, x, y, targetWidth, targetHeight);
+    }
+
     function drawPixelRect(x, y, w, h, color, alpha = 1) {
       ctx.save();
       ctx.globalAlpha = alpha;
@@ -848,49 +866,50 @@
     }
 
     // --- MENU WITH LOGO ---
-   function drawMenu() {
-  drawBackground();
+    function drawMenu() {
+      drawBackground();
+      drawFlagOverlay(); // << Flagge im Menü
 
-  // get logo's natural size and scale proportionally
-  let logoW = 480;
-  let logoH = 240;
+      // get logo's natural size and scale proportionally
+      let logoW = 480;
+      let logoH = 240;
 
-  if (logoImg.complete && logoImg.naturalWidth > 0) {
-    const aspect = logoImg.naturalWidth / logoImg.naturalHeight;
-    logoW = 500; // target width
-    logoH = logoW / aspect; // maintain ratio
-  }
+      if (logoImg.complete && logoImg.naturalWidth > 0) {
+        const aspect = logoImg.naturalWidth / logoImg.naturalHeight;
+        logoW = 500; // target width
+        logoH = logoW / aspect; // maintain ratio
+      }
 
-  const logoX = W / 2 - logoW / 2;
-  const logoY = H / 2 - logoH / 2 - 40;
+      const logoX = W / 2 - logoW / 2;
+      const logoY = H / 2 - logoH / 2 - 40;
 
-  if (logoImg.complete && logoImg.naturalWidth > 0) {
-    ctx.drawImage(logoImg, logoX, logoY, logoW, logoH);
-  } else {
-    // fallback text if logo not loaded
-    ctx.fillStyle = "#fff";
-    ctx.textAlign = "center";
-    ctx.font = "32px monospace";
-    ctx.fillText("CAPITOL DEFENDER", W / 2, H / 2);
-  }
+      if (logoImg.complete && logoImg.naturalWidth > 0) {
+        ctx.drawImage(logoImg, logoX, logoY, logoW, logoH);
+      } else {
+        // fallback text if logo not loaded
+        ctx.fillStyle = "#fff";
+        ctx.textAlign = "center";
+        ctx.font = "32px monospace";
+        ctx.fillText("CAPITOL DEFENDER", W / 2, H / 2);
+      }
 
-  // hint box
-  ctx.fillStyle = "rgba(0,0,0,0.6)";
-  ctx.fillRect(W / 2 - 240, logoY + logoH + 30, 480, 70);
+      // hint box
+      ctx.fillStyle = "rgba(0,0,0,0.6)";
+      ctx.fillRect(W / 2 - 240, logoY + logoH + 30, 480, 70);
 
-  ctx.fillStyle = "#fff";
-  ctx.font = "20px monospace";
-  ctx.textAlign = "center";
-  ctx.fillText("Click the logo or press ENTER to start", W / 2, logoY + logoH + 58);
-  ctx.font = "14px monospace";
-  ctx.fillText("High Score: " + highScore, W / 2, logoY + logoH + 80);
+      ctx.fillStyle = "#fff";
+      ctx.font = "20px monospace";
+      ctx.textAlign = "center";
+      ctx.fillText("Click the logo or press ENTER to start", W / 2, logoY + logoH + 58);
+      ctx.font = "14px monospace";
+      ctx.fillText("High Score: " + highScore, W / 2, logoY + logoH + 80);
 
-  ctx.textAlign = "left";
-}
-
+      ctx.textAlign = "left";
+    }
 
     function drawGame() {
       drawBackground();
+      drawFlagOverlay(); // << Flagge auch im Spiel
       drawEnemies();
       drawEnemyBullets();
       drawBullets();
