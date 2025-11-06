@@ -26,7 +26,6 @@
       image-rendering: crisp-edges;
       border: 3px solid #444;
       background: #000;
-      /* echte Größe = Hintergrundbild: 1024x724 */
       width: 1024px;
       height: 724px;
       display: block;
@@ -45,7 +44,6 @@
   </style>
 </head>
 <body>
-  <!-- Canvas passend zum Hintergrundbild -->
   <canvas id="game" width="1024" height="724"></canvas>
 
   <div id="info">
@@ -79,14 +77,12 @@
 
     // --- IMAGES ---
 
-    // Player images
     const playerImgNormal = new Image();
     playerImgNormal.src = "player_normal.png";
 
     const playerImgShoot = new Image();
     playerImgShoot.src = "player_shooting.png";
 
-    // Enemy images
     const enemyImages = [];
     for (let i = 1; i <= 5; i++) {
       const img = new Image();
@@ -98,14 +94,14 @@
     const backgroundImg = new Image();
     backgroundImg.src = "background.png";
 
-    // --- AUDIO (SFX + music.mp3 mit Autoplay-Workaround) ---
+    // --- AUDIO ---
 
     const MUSIC_URL = "https://github.com/bavarian472/bavarian472.github.io/blob/main/music.mp3?raw=true";
 
-    let audioCtx = null;          // SFX
+    let audioCtx = null;
     let muted = false;
-    let bgMusic = null;           // music.mp3
-    let musicBlocked = false;     // ob Autoplay geblockt wurde
+    let bgMusic = null;
+    let musicBlocked = false;
 
     function initSfxAudio() {
       try {
@@ -134,7 +130,7 @@
         let duration = 0.12;
 
         if (type === "laser") {
-          // mehr "Gunshot"-Vibe
+          // Gun-ähnlicher Knall
           duration = 0.09;
           osc.type = "square";
           osc.frequency.setValueAtTime(280, now);
@@ -172,9 +168,7 @@
 
         osc.start(now);
         osc.stop(now + duration);
-      } catch (e) {
-        // SFX Fehler ignorieren
-      }
+      } catch (e) {}
     }
 
     function startBackgroundMusic() {
@@ -212,20 +206,20 @@
       musicBlocked = false;
       bgMusic.play().catch(err => {
         console.warn("Music still blocked", err);
-        musicBlocked = true; // nochmal beim nächsten Input versuchen
+        musicBlocked = true;
       });
     }
 
     window.addEventListener("click", tryResumeMusic);
     window.addEventListener("keydown", tryResumeMusic);
 
-    // --- PLAYER (leicht größer) ---
+    // --- PLAYER (größer, auf Enemy-Niveau) ---
     const player = {
-      x: W / 2 - 10,
-      y: H - 34,
-      w: 20,
-      h: 20,
-      speed: 2.4,
+      w: 40,
+      h: 40,
+      x: W / 2 - 20,
+      y: H - 90,
+      speed: 4,
       lives: 3,
       invincibleUntil: 0,
       shootingUntil: 0,
@@ -253,7 +247,7 @@
     const popups = [];
 
     let enemyDx = 0.6;
-    let enemyStepDown = 10;
+    let enemyStepDown = 20;
     let lastEnemyMoveTime = 0;
 
     let enemyShootInterval = 1200;
@@ -308,16 +302,16 @@
       addPopup(msg.title, msg.subtitle, 2600);
     }
 
-    // --- ENEMIES (größer + etwas mehr Abstand) ---
+    // --- ENEMIES ---
     function initEnemiesForLevel() {
       enemies.length = 0;
 
       const enemyRows = 3 + Math.min(level - 1, 2);
       const enemyCols = 9;
-      const enemySpacingX = 60;   // an größere Breite angepasst
-      const enemySpacingY = 40;
+      const enemySpacingX = 80;
+      const enemySpacingY = 60;
       const enemyStartX = 80;
-      const enemyStartY = 90;
+      const enemyStartY = 80;
 
       for (let row = 0; row < enemyRows; row++) {
         for (let col = 0; col < enemyCols; col++) {
@@ -326,14 +320,14 @@
           enemies.push({
             x,
             y,
-            w: 36,   // größer, passt zur großen Bühne
-            h: 32,
+            w: 40,
+            h: 40,
             spriteIndex: Math.floor(Math.random() * enemyImages.length),
           });
         }
       }
 
-      enemyDx = 0.45 + level * 0.2;
+      enemyDx = 0.5 + level * 0.2;
       enemyShootInterval = Math.max(450, 1200 - (level - 1) * 120);
     }
 
@@ -353,11 +347,11 @@
       else type = "life";
 
       powerups.push({
-        x: x + 2,
+        x: x + 8,
         y,
-        w: 14,
-        h: 14,
-        dy: 1.0,
+        w: 16,
+        h: 16,
+        dy: 1.2,
         type,
       });
     }
@@ -429,15 +423,20 @@
 
       player.shootingUntil = now + 150;
 
+      const bulletWidth = 4;
+      const bulletHeight = 14;
+      const baseX = player.x + player.w / 2 - bulletWidth / 2;
+      const startY = player.y - 6;
+
       if (spreadShot) {
-        bullets.push({ x: player.x + player.w / 2 - 1, y: player.y - 4, w: 4, h: 10, dx: 0,    dy: -5 });
-        bullets.push({ x: player.x + player.w / 2 - 1, y: player.y - 4, w: 4, h: 10, dx: -1.4, dy: -4.4 });
-        bullets.push({ x: player.x + player.w / 2 - 1, y: player.y - 4, w: 4, h: 10, dx: 1.4,  dy: -4.4 });
+        bullets.push({ x: baseX, y: startY, w: bulletWidth, h: bulletHeight, dx: 0,    dy: -6 });
+        bullets.push({ x: baseX, y: startY, w: bulletWidth, h: bulletHeight, dx: -1.6, dy: -5.2 });
+        bullets.push({ x: baseX, y: startY, w: bulletWidth, h: bulletHeight, dx: 1.6,  dy: -5.2 });
       } else if (doubleShot) {
-        bullets.push({ x: player.x + 4,               y: player.y - 4, w: 4, h: 10, dx: 0, dy: -5 });
-        bullets.push({ x: player.x + player.w - 8,    y: player.y - 4, w: 4, h: 10, dx: 0, dy: -5 });
+        bullets.push({ x: player.x + 6,               y: startY, w: bulletWidth, h: bulletHeight, dx: 0, dy: -6 });
+        bullets.push({ x: player.x + player.w - 10,   y: startY, w: bulletWidth, h: bulletHeight, dx: 0, dy: -6 });
       } else {
-        bullets.push({ x: player.x + player.w / 2 - 2,y: player.y - 4, w: 4, h: 10, dx: 0, dy: -5 });
+        bullets.push({ x: baseX, y: startY, w: bulletWidth, h: bulletHeight, dx: 0, dy: -6 });
       }
 
       lastPlayerShotTime = now;
@@ -452,7 +451,7 @@
 
       const bottomEnemiesByCol = {};
       for (const e of enemies) {
-        const colKey = Math.round(e.x / 60);
+        const colKey = Math.round(e.x / 80);
         if (!bottomEnemiesByCol[colKey] || bottomEnemiesByCol[colKey].y < e.y) {
           bottomEnemiesByCol[colKey] = e;
         }
@@ -465,9 +464,9 @@
         x: shooter.x + shooter.w / 2 - 2,
         y: shooter.y + shooter.h,
         w: 4,
-        h: 10,
+        h: 14,
         dx: 0,
-        dy: 2.4 + level * 0.3,
+        dy: 3 + level * 0.3,
       });
 
       lastEnemyShotTime = now;
@@ -536,8 +535,8 @@
 
       if (keys["ArrowLeft"])  player.x -= player.speed;
       if (keys["ArrowRight"]) player.x += player.speed;
-      if (player.x < 10) player.x = 10;
-      if (player.x + player.w > W - 10) player.x = W - 10 - player.w;
+      if (player.x < 16) player.x = 16;
+      if (player.x + player.w > W - 16) player.x = W - 16 - player.w;
 
       for (let i = bullets.length - 1; i >= 0; i--) {
         const b = bullets[i];
@@ -562,7 +561,7 @@
         let hitEdge = false;
         for (const e of enemies) {
           e.x += enemyDx;
-          if (e.x <= 10 || e.x + e.w >= W - 10) {
+          if (e.x <= 16 || e.x + e.w >= W - 16) {
             hitEdge = true;
           }
         }
@@ -692,48 +691,15 @@
       }
     }
 
-    // --- DRAW HELPERS ---
+    // --- DRAW ---
 
     function drawBackground() {
-      if (backgroundImg.complete && backgroundImg.naturalWidth) {
+      if (backgroundImg.complete && backgroundImg.naturalWidth > 0) {
         ctx.drawImage(backgroundImg, 0, 0, W, H);
       } else {
-        // Fallback: alter Capitol-Pixel-Hintergrund
         ctx.fillStyle = "#020816";
         ctx.fillRect(0, 0, W, H);
-
-        for (let i = 0; i < 40; i++) {
-          const sx = (i * 23) % W;
-          const sy = (i * 17) % 120;
-          ctx.fillStyle = "rgba(207,216,220,0.55)";
-          ctx.fillRect(sx, sy, 2, 2);
-        }
-
-        const groundY = H - 80;
-        ctx.fillStyle = "#081c0c";
-        ctx.fillRect(0, groundY, W, 80);
       }
-    }
-
-    // Capitol-Bau (vorne, vor dem BG)
-    function drawCapitolForeground() {
-      const groundY = H - 80;
-      const centerX = W / 2;
-
-      drawPixelRect(centerX - 110, groundY - 24, 60, 18, "#e0e0e0");
-      drawPixelRect(centerX + 50,  groundY - 24, 60, 18, "#e0e0e0");
-
-      drawPixelRect(centerX - 70, groundY - 30, 140, 24, "#f5f5f5");
-
-      for (let i = -56; i <= 56; i += 16) {
-        drawPixelRect(centerX + i, groundY - 30, 6, 24, "#d0d0d0");
-      }
-
-      drawPixelRect(centerX - 28, groundY - 52, 56, 14, "#e0e0e0");
-      drawPixelRect(centerX - 18, groundY - 58, 36, 6, "#f5f5f5");
-      drawPixelRect(centerX - 5,  groundY - 66, 10, 8, "#fafafa");
-      drawPixelRect(centerX + 2,  groundY - 74, 2, 8, "#b0bec5");
-      drawPixelRect(centerX + 4,  groundY - 72, 8, 3, "#b71c1c");
     }
 
     function drawPixelRect(x, y, w, h, color, alpha = 1) {
@@ -749,7 +715,7 @@
       const flashing = now < player.invincibleUntil && Math.floor(now / 100) % 2 === 0;
 
       if (now < upgrades.shieldUntil) {
-        drawPixelRect(player.x - 5, player.y - 5, player.w + 10, player.h + 10, "#80deea", 0.25);
+        drawPixelRect(player.x - 6, player.y - 6, player.w + 12, player.h + 12, "#80deea", 0.25);
       }
 
       if (flashing) return;
@@ -760,10 +726,9 @@
       if (img && img.complete) {
         ctx.drawImage(img, Math.round(player.x), Math.round(player.y), player.w, player.h);
       } else {
-        drawPixelRect(player.x, player.y + 6, player.w, player.h - 6, "#b71c1c");
-        drawPixelRect(player.x + 6, player.y, 8, 6, "#f5d7b3");
-        drawPixelRect(player.x + player.w / 2 - 1, player.y + 8, 2, 6, "#ff5252");
-        drawPixelRect(player.x + 3, player.y + 6, player.w - 6, 3, "#d32f2f");
+        drawPixelRect(player.x, player.y + 8, player.w, player.h - 8, "#b71c1c");
+        drawPixelRect(player.x + 10, player.y, 20, 8, "#f5d7b3");
+        drawPixelRect(player.x + player.w / 2 - 1, player.y + 10, 2, 8, "#ff5252");
       }
     }
 
@@ -775,10 +740,8 @@
         } else {
           const bodyColor = "#1976d2";
           const faceColor = "#ffeb3b";
-          drawPixelRect(e.x, e.y + 6, e.w, e.h - 6, bodyColor);
-          drawPixelRect(e.x + 4, e.y, e.w - 8, 6, faceColor);
-          drawPixelRect(e.x + 5, e.y + 2, 2, 2, "#000");
-          drawPixelRect(e.x + e.w - 7, e.y + 2, 2, 2, "#000");
+          drawPixelRect(e.x, e.y + 10, e.w, e.h - 10, bodyColor);
+          drawPixelRect(e.x + 6, e.y, e.w - 12, 10, faceColor);
         }
       }
     }
@@ -824,9 +787,9 @@
       ctx.fillText("SCORE: " + score, 16, 26);
       ctx.fillText("LEVEL: " + level, 16, 48);
 
-      ctx.fillText("LIVES:", 180, 26);
+      ctx.fillText("LIVES:", 200, 26);
       for (let i = 0; i < player.lives; i++) {
-        drawPixelRect(250 + i * 12, 18, 10, 10, "#e53935");
+        drawPixelRect(270 + i * 14, 18, 10, 10, "#e53935");
       }
 
       ctx.fillText("SIDE: RED", 16, 70);
@@ -842,7 +805,7 @@
       let iconIndex = 0;
       function icon(active, color) {
         if (!active) return;
-        drawPixelRect(70 + iconIndex * 14, 86, 12, 12, color);
+        drawPixelRect(74 + iconIndex * 14, 86, 12, 12, color);
         iconIndex++;
       }
 
@@ -859,7 +822,7 @@
       const p = popups[0];
 
       ctx.save();
-      ctx.fillStyle = "rgba(0, 0, 0, 0.75)";
+      ctx.fillStyle = "rgba(0, 0, 0, 0.7)";
       ctx.fillRect(W / 2 - 160, H / 2 - 50, 320, 100);
 
       ctx.fillStyle = "#fff";
@@ -876,41 +839,33 @@
       ctx.restore();
     }
 
-    function drawMenuBackground() {
-      drawBackground(); // nutzt auch dein Bild
-      // leichte Overlay-Streifen, damit Text lesbar bleibt
-      for (let i = 0; i < 8; i++) {
-        drawPixelRect(0, 120 + i * 40, W, 18, "rgba(0,0,0,0.4)");
-      }
-    }
-
     function drawMenu() {
-      ctx.clearRect(0, 0, W, H);
-      drawMenuBackground();
+      drawBackground();
+
+      ctx.fillStyle = "rgba(0,0,0,0.5)";
+      ctx.fillRect(0, 120, W, 260);
 
       ctx.fillStyle = "#fff";
       ctx.textAlign = "center";
       ctx.font = "32px monospace";
-      ctx.fillText("CAPITOL DEFENDER", W / 2, 140);
+      ctx.fillText("CAPITOL DEFENDER", W / 2, 170);
 
       ctx.font = "18px monospace";
-      ctx.fillText("Du spielst den roten Reformer,", W / 2, 180);
-      ctx.fillText("der blaue Bürokratie-Blöcke stoppt.", W / 2, 205);
+      ctx.fillText("Du spielst den roten Reformer,", W / 2, 210);
+      ctx.fillText("der blaue Bürokratie-Blöcke stoppt.", W / 2, 235);
 
-      ctx.fillText("← / → : bewegen", W / 2, 250);
-      ctx.fillText("SPACE : schießen", W / 2, 275);
-      ctx.fillText("ENTER : Start", W / 2, 300);
-      ctx.fillText("M : Mute / Unmute", W / 2, 325);
+      ctx.fillText("← / → : bewegen", W / 2, 270);
+      ctx.fillText("SPACE : schießen", W / 2, 295);
+      ctx.fillText("ENTER : Start", W / 2, 320);
+      ctx.fillText("M : Mute / Unmute", W / 2, 345);
 
-      ctx.fillText("HIGH SCORE: " + highScore, W / 2, 370);
+      ctx.fillText("HIGH SCORE: " + highScore, W / 2, 380);
 
       ctx.textAlign = "left";
     }
 
     function drawGame() {
-      ctx.clearRect(0, 0, W, H);
       drawBackground();
-      drawCapitolForeground();
       drawEnemies();
       drawEnemyBullets();
       drawBullets();
