@@ -94,6 +94,8 @@
 
     // --- AUDIO (SFX + music.mp3 mit Autoplay-Workaround) ---
 
+    const MUSIC_URL = "https://github.com/bavarian472/bavarian472.github.io/blob/main/music.mp3?raw=true"
+    
     let audioCtx = null;          // SFX
     let muted = false;
     let bgMusic = null;           // music.mp3
@@ -169,7 +171,7 @@
     function startBackgroundMusic() {
       try {
         if (!bgMusic) {
-          bgMusic = new Audio("music.mp3");
+          bgMusic = new Audio(MUSIC_URL);
           bgMusic.loop = true;
           bgMusic.volume = 0.4;
         }
