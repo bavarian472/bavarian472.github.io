@@ -44,7 +44,6 @@
   </style>
 </head>
 <body>
-  <!-- höhere Auflösung -->
   <canvas id="game" width="320" height="240"></canvas>
 
   <div id="info">
@@ -76,14 +75,29 @@
       highScore = 0;
     }
 
+    // --- PLAYER IMAGES ---
+    const playerImgNormal = new Image();
+    playerImgNormal.src = "player_normal.png";
+    const playerImgShoot = new Image();
+    playerImgShoot.src = "player_shoot.png";
+
     // Audio
     let audioCtx = null;
     let muted = false;
+
+    // Background music (US Anthem in 8-bit style)
+    let bgGain = null;
+    let bgMelodyTimeout = null;
 
     function initAudio() {
       if (!audioCtx) {
         const AC = window.AudioContext || window.webkitAudioContext;
         if (AC) audioCtx = new AC();
+      }
+      if (audioCtx && !bgGain) {
+        bgGain = audioCtx.createGain();
+        bgGain.gain.value = muted ? 0 : 0.15;
+        bgGain.connect(audioCtx.destination);
       }
     }
 
@@ -139,6 +153,70 @@
       osc.stop(now + duration);
     }
 
+    // Very simple chiptune-style anthem fragment (freq in Hz, dur in seconds)
+    const anthemMelody = [
+      // "O say can you see" (rough, short version)
+      { f: 392, d: 0.4 }, // G
+      { f: 440, d: 0.4 }, // A
+      { f: 494, d: 0.4 }, // B
+      { f: 523, d: 0.8 }, // C
+      { f: 0,   d: 0.2 }, // pause
+      { f: 523, d: 0.4 }, // C
+      { f: 494, d: 0.4 }, // B
+      { f: 440, d: 0.4 }, // A
+      { f: 392, d: 0.8 }, // G
+      { f: 0,   d: 0.3 }, // pause
+      // small tail so it feels like a loop
+      { f: 440, d: 0.4 },
+      { f: 392, d: 0.6 },
+    ];
+
+    function scheduleAnthemLoop() {
+      if (!audioCtx || !bgGain) return;
+
+      const startTime = audioCtx.currentTime + 0.1;
+      let t = startTime;
+
+      anthemMelody.forEach(note => {
+        if (!note.f) {
+          t += note.d;
+          return;
+        }
+        const osc = audioCtx.createOscillator();
+        const g = audioCtx.createGain();
+        osc.type = "square";
+        osc.frequency.setValueAtTime(note.f, t);
+        g.gain.setValueAtTime(1.0, t);
+        g.gain.exponentialRampToValueAtTime(0.001, t + note.d * 0.9);
+
+        osc.connect(g);
+        g.connect(bgGain);
+
+        osc.start(t);
+        osc.stop(t + note.d);
+        t += note.d;
+      });
+
+      const totalMs = (t - startTime) * 1000;
+      bgMelodyTimeout = setTimeout(() => {
+        if (!muted && state !== GAME_STATE.MENU) {
+          scheduleAnthemLoop();
+        }
+      }, totalMs + 200);
+    }
+
+    function startBackgroundMusic() {
+      initAudio();
+      if (!audioCtx || !bgGain) return;
+      if (bgMelodyTimeout) {
+        clearTimeout(bgMelodyTimeout);
+        bgMelodyTimeout = null;
+      }
+      if (!muted && state !== GAME_STATE.MENU) {
+        scheduleAnthemLoop();
+      }
+    }
+
     // --- PLAYER (roter Reformer) ---
     const player = {
       x: W / 2 - 8,
@@ -148,6 +226,7 @@
       speed: 2.2,
       lives: 3,
       invincibleUntil: 0,
+      shootingUntil: 0, // für Schuss-Sprite
     };
 
     // Upgrades mit Dauer
@@ -185,6 +264,15 @@
 
       if (e.key === "m" || e.key === "M") {
         muted = !muted;
+        if (bgGain) {
+          bgGain.gain.value = muted ? 0 : 0.15;
+        }
+        if (!muted && state === GAME_STATE.PLAYING) {
+          startBackgroundMusic();
+        } else if (muted && bgMelodyTimeout) {
+          clearTimeout(bgMelodyTimeout);
+          bgMelodyTimeout = null;
+        }
         if (!muted) playSound("powerup");
       }
 
@@ -271,7 +359,6 @@
         }
       }
 
-      // Difficulty scaling
       enemyDx = 0.4 + level * 0.2;
       enemyShootInterval = Math.max(450, 1200 - (level - 1) * 120);
     }
@@ -367,8 +454,10 @@
       const doubleShot = now < upgrades.doubleUntil;
       const spreadShot = now < upgrades.spreadUntil;
 
+      // Schuss-Status für Sprite
+      player.shootingUntil = now + 150;
+
       if (spreadShot) {
-        // Dreifach-Schuss mit leichter Streuung
         bullets.push({
           x: player.x + player.w / 2 - 1,
           y: player.y - 4,
@@ -477,6 +566,7 @@
       lastTime = 0;
       state = GAME_STATE.PLAYING;
       showLevelPopup();
+      startBackgroundMusic();
     }
 
     function startNextLevel() {
@@ -696,38 +786,30 @@
 
     // Capitol-Hintergrund
     function drawCapitolBackground() {
-      // Himmel
       drawPixelRect(0, 0, W, H, "#020816");
-      // Sterne
       for (let i = 0; i < 35; i++) {
         const sx = (i * 19) % W;
         const sy = (i * 13) % 80;
         drawPixelRect(sx, sy, 2, 2, "#cfd8dc", 0.55);
       }
 
-      // Boden
       const groundY = H - 36;
       drawPixelRect(0, groundY, W, 36, "#081c0c");
 
       const centerX = W / 2;
 
-      // Seitenflügel
       drawPixelRect(centerX - 96, groundY - 20, 56, 16, "#e0e0e0");
       drawPixelRect(centerX + 40, groundY - 20, 56, 16, "#e0e0e0");
 
-      // Hauptgebäude
       drawPixelRect(centerX - 60, groundY - 24, 120, 20, "#f5f5f5");
 
-      // Säulen
       for (let i = -48; i <= 48; i += 16) {
         drawPixelRect(centerX + i, groundY - 24, 6, 20, "#d0d0d0");
       }
 
-      // Kuppel
       drawPixelRect(centerX - 24, groundY - 44, 48, 12, "#e0e0e0");
       drawPixelRect(centerX - 16, groundY - 48, 32, 4, "#f5f5f5");
       drawPixelRect(centerX - 4, groundY - 54, 8, 6, "#fafafa");
-      // kleine Fahne
       drawPixelRect(centerX + 2, groundY - 60, 2, 6, "#b0bec5");
       drawPixelRect(centerX + 4, groundY - 58, 6, 2, "#b71c1c");
     }
@@ -736,20 +818,25 @@
       const now = performance.now();
       const flashing = now < player.invincibleUntil && Math.floor(now / 100) % 2 === 0;
 
+      // Shield Aura
       if (now < upgrades.shieldUntil) {
         drawPixelRect(player.x - 4, player.y - 4, player.w + 8, player.h + 8, "#80deea", 0.25);
       }
 
       if (flashing) return;
 
-      // Körper in rot
-      drawPixelRect(player.x, player.y + 5, player.w, player.h - 5, "#b71c1c");
-      // Kopf
-      drawPixelRect(player.x + 5, player.y, 6, 5, "#f5d7b3");
-      // Krawatte
-      drawPixelRect(player.x + player.w / 2 - 1, player.y + 7, 2, 5, "#ff5252");
-      // Schultern
-      drawPixelRect(player.x + 2, player.y + 5, player.w - 4, 3, "#d32f2f");
+      const isShooting = now < player.shootingUntil;
+      const img = isShooting ? playerImgShoot : playerImgNormal;
+
+      if (img && img.complete) {
+        ctx.drawImage(img, Math.round(player.x), Math.round(player.y), player.w, player.h);
+      } else {
+        // Fallback: einfache Pixelfigur
+        drawPixelRect(player.x, player.y + 5, player.w, player.h - 5, "#b71c1c");
+        drawPixelRect(player.x + 5, player.y, 6, 5, "#f5d7b3");
+        drawPixelRect(player.x + player.w / 2 - 1, player.y + 7, 2, 5, "#ff5252");
+        drawPixelRect(player.x + 2, player.y + 5, player.w - 4, 3, "#d32f2f");
+      }
     }
 
     function drawEnemies() {
@@ -807,13 +894,11 @@
       ctx.fillText("SCORE: " + score, 8, 16);
       ctx.fillText("LEVEL: " + level, 8, 32);
 
-      // Lives
       ctx.fillText("LIVES:", 120, 16);
       for (let i = 0; i < player.lives; i++) {
         drawPixelRect(180 + i * 10, 8, 8, 8, "#e53935");
       }
 
-      // Side & Highscore
       ctx.fillText("SIDE: RED", 8, 48);
 
       ctx.textAlign = "right";
@@ -821,7 +906,6 @@
       ctx.fillText(muted ? "MUTE" : "SOUND", W - 8, 32);
       ctx.textAlign = "left";
 
-      // Powerup-Status
       const now = performance.now();
       ctx.fillText("PWR:", 8, 64);
 
@@ -893,7 +977,6 @@
       ctx.fillText("Du spielst den roten Reformer,", W / 2, 100);
       ctx.fillText("der blaue Bürokratie-Blöcke stoppt.", W / 2, 118);
 
-      ctx.font = "12px monospace";
       ctx.fillText("← / → : bewegen", W / 2, 148);
       ctx.fillText("SPACE : schießen", W / 2, 164);
       ctx.fillText("ENTER : Start", W / 2, 180);
