@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>Capitol Defender – Custom</title>
+  <title>Capitol Defender</title>
   <style>
     * {
       box-sizing: border-box;
@@ -29,6 +29,7 @@
       width: 1024px;
       height: 724px;
       display: block;
+      cursor: pointer; /* so menu feels clickable */
     }
 
     #info {
@@ -92,6 +93,9 @@
 
     const backgroundImg = new Image();
     backgroundImg.src = "background.png";
+
+    const logoImg = new Image();
+    logoImg.src = "logo.png";
 
     // --- AUDIO ---
 
@@ -275,6 +279,28 @@
 
     window.addEventListener("keyup", (e) => {
       keys[e.key] = false;
+    });
+
+    // click logo to start
+    canvas.addEventListener("click", (e) => {
+      if (state !== GAME_STATE.MENU) return;
+      const rect = canvas.getBoundingClientRect();
+      const mouseX = e.clientX - rect.left;
+      const mouseY = e.clientY - rect.top;
+
+      const logoW = 480;
+      const logoH = 240;
+      const logoX = W / 2 - logoW / 2;
+      const logoY = H / 2 - logoH / 2 - 40;
+
+      if (
+        mouseX >= logoX &&
+        mouseX <= logoX + logoW &&
+        mouseY >= logoY &&
+        mouseY <= logoY + logoH
+      ) {
+        startNewGame();
+      }
     });
 
     // --- LEVEL TEXTS ---
@@ -821,27 +847,36 @@
       ctx.restore();
     }
 
+    // --- MENU WITH LOGO ---
     function drawMenu() {
       drawBackground();
 
-      ctx.fillStyle = "rgba(0,0,0,0.5)";
-      ctx.fillRect(0, 120, W, 260);
+      // centered logo
+      const logoW = 480;
+      const logoH = 240;
+      const logoX = W / 2 - logoW / 2;
+      const logoY = H / 2 - logoH / 2 - 40;
+
+      if (logoImg.complete && logoImg.naturalWidth > 0) {
+        ctx.drawImage(logoImg, logoX, logoY, logoW, logoH);
+      } else {
+        // fallback text if logo not loaded
+        ctx.fillStyle = "#fff";
+        ctx.textAlign = "center";
+        ctx.font = "32px monospace";
+        ctx.fillText("CAPITOL DEFENDER", W / 2, H / 2);
+      }
+
+      // hint box
+      ctx.fillStyle = "rgba(0,0,0,0.6)";
+      ctx.fillRect(W / 2 - 240, logoY + logoH + 30, 480, 70);
 
       ctx.fillStyle = "#fff";
+      ctx.font = "20px monospace";
       ctx.textAlign = "center";
-      ctx.font = "32px monospace";
-      ctx.fillText("CAPITOL DEFENDER", W / 2, 170);
-
-      ctx.font = "18px monospace";
-      ctx.fillText("You play the red reformer,", W / 2, 210);
-      ctx.fillText("stopping blue bureaucracy blocks.", W / 2, 235);
-
-      ctx.fillText("← / → : move", W / 2, 270);
-      ctx.fillText("SPACE : shoot", W / 2, 295);
-      ctx.fillText("ENTER : start", W / 2, 320);
-      ctx.fillText("M : mute / unmute", W / 2, 345);
-
-      ctx.fillText("HIGH SCORE: " + highScore, W / 2, 380);
+      ctx.fillText("Click the logo or press ENTER to start", W / 2, logoY + logoH + 58);
+      ctx.font = "14px monospace";
+      ctx.fillText("High Score: " + highScore, W / 2, logoY + logoH + 80);
 
       ctx.textAlign = "left";
     }
