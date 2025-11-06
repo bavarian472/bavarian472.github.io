@@ -443,31 +443,41 @@
 
     // start a dive for one random enemy
     function tryStartDive(now) {
-      if (level < 2) return; // keep level 1 simple
+  if (level < 2) return; // keep level 1 simple
 
-      const interval = Math.max(1200, 3200 - level * 250); // faster on higher levels
-      if (now - lastDiveTime < interval) return;
+  const interval = Math.max(1200, 3200 - level * 250); // faster on higher levels
+  if (now - lastDiveTime < interval) return;
 
-      const candidates = enemies.filter(e => !e.isDiving);
-      if (!candidates.length) return;
+  const candidates = enemies.filter(e => !e.isDiving);
+  if (!candidates.length) return;
 
-      const e = candidates[Math.floor(Math.random() * candidates.length)];
-      e.isDiving = true;
+  const e = candidates[Math.floor(Math.random() * candidates.length)];
+  e.isDiving = true;
 
-      // aim directly toward player's current position
-      const targetX = player.x + player.w / 2;
-      const targetY = player.y + player.h / 2;
+  // aim directly toward player's current position
+  const targetX = player.x + player.w / 2;
+  const targetY = player.y + player.h / 2;
 
-      const dx = targetX - e.x;
-      const dy = targetY - e.y;
+  const dx = targetX - e.x;
+  const dy = targetY - e.y;
 
-      const steps = 60; // frames-ish to reach player
-      e.vx = dx / steps;
-      e.vy = dy / steps;                 // steeper dive than before
-      e.diveSpeedY = 0.10 + Math.random() * 0.05; // gravity-ish
+  const steps = 60; // frames-ish to reach player
+  let vx = dx / steps;
+  let vy = dy / steps;
 
-      lastDiveTime = now;
-    }
+  // make divers ~25% slower
+  vx *= 0.75;
+  vy *= 0.75;
+
+  e.vx = vx;
+  e.vy = vy;
+
+  // also reduce "gravity" by 25%
+  e.diveSpeedY = (0.10 + Math.random() * 0.05) * 0.75;
+
+  lastDiveTime = now;
+}
+
 
     // --- POWERUPS ---
     function spawnPowerup(x, y) {
