@@ -848,38 +848,46 @@
     }
 
     // --- MENU WITH LOGO ---
-    function drawMenu() {
-      drawBackground();
+   function drawMenu() {
+  drawBackground();
 
-      // centered logo
-      const logoW = 480;
-      const logoH = 240;
-      const logoX = W / 2 - logoW / 2;
-      const logoY = H / 2 - logoH / 2 - 40;
+  // get logo's natural size and scale proportionally
+  let logoW = 480;
+  let logoH = 240;
 
-      if (logoImg.complete && logoImg.naturalWidth > 0) {
-        ctx.drawImage(logoImg, logoX, logoY, logoW, logoH);
-      } else {
-        // fallback text if logo not loaded
-        ctx.fillStyle = "#fff";
-        ctx.textAlign = "center";
-        ctx.font = "32px monospace";
-        ctx.fillText("CAPITOL DEFENDER", W / 2, H / 2);
-      }
+  if (logoImg.complete && logoImg.naturalWidth > 0) {
+    const aspect = logoImg.naturalWidth / logoImg.naturalHeight;
+    logoW = 500; // target width
+    logoH = logoW / aspect; // maintain ratio
+  }
 
-      // hint box
-      ctx.fillStyle = "rgba(0,0,0,0.6)";
-      ctx.fillRect(W / 2 - 240, logoY + logoH + 30, 480, 70);
+  const logoX = W / 2 - logoW / 2;
+  const logoY = H / 2 - logoH / 2 - 40;
 
-      ctx.fillStyle = "#fff";
-      ctx.font = "20px monospace";
-      ctx.textAlign = "center";
-      ctx.fillText("Click the logo or press ENTER to start", W / 2, logoY + logoH + 58);
-      ctx.font = "14px monospace";
-      ctx.fillText("High Score: " + highScore, W / 2, logoY + logoH + 80);
+  if (logoImg.complete && logoImg.naturalWidth > 0) {
+    ctx.drawImage(logoImg, logoX, logoY, logoW, logoH);
+  } else {
+    // fallback text if logo not loaded
+    ctx.fillStyle = "#fff";
+    ctx.textAlign = "center";
+    ctx.font = "32px monospace";
+    ctx.fillText("CAPITOL DEFENDER", W / 2, H / 2);
+  }
 
-      ctx.textAlign = "left";
-    }
+  // hint box
+  ctx.fillStyle = "rgba(0,0,0,0.6)";
+  ctx.fillRect(W / 2 - 240, logoY + logoH + 30, 480, 70);
+
+  ctx.fillStyle = "#fff";
+  ctx.font = "20px monospace";
+  ctx.textAlign = "center";
+  ctx.fillText("Click the logo or press ENTER to start", W / 2, logoY + logoH + 58);
+  ctx.font = "14px monospace";
+  ctx.fillText("High Score: " + highScore, W / 2, logoY + logoH + 80);
+
+  ctx.textAlign = "left";
+}
+
 
     function drawGame() {
       drawBackground();
