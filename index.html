@@ -47,8 +47,8 @@
   <canvas id="game" width="1024" height="724"></canvas>
 
   <div id="info">
-    <strong>Controls:</strong> ← / → bewegen, <strong>Space</strong> schießen,
-    <strong>Enter</strong> starten, <strong>R</strong> Restart, <strong>M</strong> Mute.
+    <strong>Controls:</strong> ← / → move, <strong>Space</strong> shoot,
+    <strong>Enter</strong> start, <strong>R</strong> restart, <strong>M</strong> mute.
   </div>
 
   <script>
@@ -66,7 +66,7 @@
 
     let state = GAME_STATE.MENU;
 
-    // Highscore
+    // High score
     let highScore = 0;
     try {
       const saved = localStorage.getItem("pixelInvadersHighScore");
@@ -90,7 +90,6 @@
       enemyImages.push(img);
     }
 
-    // Hintergrundbild
     const backgroundImg = new Image();
     backgroundImg.src = "background.png";
 
@@ -130,7 +129,7 @@
         let duration = 0.12;
 
         if (type === "laser") {
-          // Gun-ähnlicher Knall
+          // more gun-like
           duration = 0.09;
           osc.type = "square";
           osc.frequency.setValueAtTime(280, now);
@@ -180,8 +179,7 @@
         }
         if (muted) return;
 
-        bgMusic.play().catch(err => {
-          console.warn("Music autoplay blocked – will start after interaction", err);
+        bgMusic.play().catch(() => {
           musicBlocked = true;
         });
       } catch (e) {
@@ -194,8 +192,7 @@
       if (muted) {
         bgMusic.pause();
       } else {
-        bgMusic.play().catch(err => {
-          console.warn("Music play failed after unmute", err);
+        bgMusic.play().catch(() => {
           musicBlocked = true;
         });
       }
@@ -204,8 +201,7 @@
     function tryResumeMusic() {
       if (!musicBlocked || !bgMusic || muted) return;
       musicBlocked = false;
-      bgMusic.play().catch(err => {
-        console.warn("Music still blocked", err);
+      bgMusic.play().catch(() => {
         musicBlocked = true;
       });
     }
@@ -213,7 +209,7 @@
     window.addEventListener("click", tryResumeMusic);
     window.addEventListener("keydown", tryResumeMusic);
 
-    // --- PLAYER (größer, auf Enemy-Niveau) ---
+    // --- PLAYER (bigger) ---
     const player = {
       w: 40,
       h: 40,
@@ -281,13 +277,13 @@
       keys[e.key] = false;
     });
 
-    // --- LEVEL-TEXTE ---
+    // --- LEVEL TEXTS (now English) ---
     const levelMessages = {
-      1: { title: "LEVEL 1 – FIRST FILIBUSTER", subtitle: "Die erste Welle blauer Formulare rollt an." },
-      2: { title: "LEVEL 2 – TAX STORM",        subtitle: "Neue Abgaben, noch mehr Akten – halte dagegen." },
-      3: { title: "LEVEL 3 – REGULATION FLOOD", subtitle: "Die Bürokratie flutet das Capitol." },
-      4: { title: "LEVEL 4 – COMMITTEE CHAOS",  subtitle: "Sitzungen endlos, Geduld nicht." },
-      5: { title: "LEVEL 5 – SWAMP BOSS",       subtitle: "Der Sumpf wirft alles, was er hat." }
+      1: { title: "LEVEL 1 – FIRST FILIBUSTER", subtitle: "The first wave of blue paperwork is incoming." },
+      2: { title: "LEVEL 2 – TAX STORM",        subtitle: "New taxes, more files – hold the line." },
+      3: { title: "LEVEL 3 – REGULATION FLOOD", subtitle: "Bureaucracy floods the Capitol." },
+      4: { title: "LEVEL 4 – COMMITTEE CHAOS",  subtitle: "Endless hearings, no patience." },
+      5: { title: "LEVEL 5 – SWAMP BOSS",       subtitle: "The swamp throws everything it has." }
     };
 
     function addPopup(title, subtitle, life = 2500) {
@@ -297,7 +293,7 @@
     function showLevelPopup() {
       const msg = levelMessages[level] || {
         title: "LEVEL " + level,
-        subtitle: "Die Bürokratie wird dichter."
+        subtitle: "Bureaucracy grows thicker."
       };
       addPopup(msg.title, msg.subtitle, 2600);
     }
@@ -331,7 +327,7 @@
       enemyShootInterval = Math.max(450, 1200 - (level - 1) * 120);
     }
 
-    // --- POWERUPS (seltener) ---
+    // --- POWERUPS (rarer) ---
     function spawnPowerup(x, y) {
       const overallChance = 0.12;
       if (Math.random() > overallChance) return;
@@ -359,29 +355,29 @@
     function applyPowerup(type, now) {
       if (type === "rapid") {
         upgrades.rapidUntil = now + 8000;
-        addPopup("Power-up: Rapid Fire", "Signifikant höhere Feuerrate.", 1800);
+        addPopup("Power-Up: Rapid Fire", "Significantly higher rate of fire.", 1800);
       } else if (type === "double") {
         upgrades.doubleUntil = now + 8000;
-        addPopup("Power-up: Double Shot", "Zwei Schüsse gleichzeitig.", 1800);
+        addPopup("Power-Up: Double Shot", "Two shots at once.", 1800);
       } else if (type === "shield") {
         upgrades.shieldUntil = now + 10000;
-        addPopup("Power-up: Shield", "Ein Treffer wird komplett geblockt.", 1800);
+        addPopup("Power-Up: Shield", "Blocks one incoming hit.", 1800);
       } else if (type === "pierce") {
         upgrades.pierceUntil = now + 8000;
-        addPopup("Power-up: Pierce Shot", "Schüsse durchschlagen Gegner.", 1800);
+        addPopup("Power-Up: Piercing Shot", "Bullets pierce through enemies.", 1800);
       } else if (type === "spread") {
         upgrades.spreadUntil = now + 8000;
-        addPopup("Power-up: Spread Shot", "Dreifacher Streuschuss.", 1800);
+        addPopup("Power-Up: Spread Shot", "Triple spread fire.", 1800);
       } else if (type === "score") {
         upgrades.scoreMultUntil = now + 10000;
-        addPopup("Power-up: Score Boost", "Doppelter Score für Abschüsse.", 1800);
+        addPopup("Power-Up: Score Boost", "Double points for enemy kills.", 1800);
       } else if (type === "life") {
         if (player.lives < 8) {
           player.lives++;
-          addPopup("Extra Life", "Ein zusätzliches Leben.", 1800);
+          addPopup("Extra Life", "One additional life.", 1800);
         } else {
           score += 50;
-          addPopup("Bonus Score", "+50 Punkte statt Leben.", 1800);
+          addPopup("Bonus Score", "+50 points instead of a life.", 1800);
         }
       }
       playSound("powerup");
@@ -513,7 +509,7 @@
     function gameOver() {
       state = GAME_STATE.GAMEOVER;
       playSound("explosion");
-      addPopup("Capitol verloren.", "Die Bürokratie war diesmal stärker.", 2600);
+      addPopup("Capitol lost.", "Bureaucracy was stronger this time.", 2600);
       if (score > highScore) {
         highScore = score;
         try {
@@ -538,22 +534,23 @@
       if (player.x < 16) player.x = 16;
       if (player.x + player.w > W - 16) player.x = W - 16 - player.w;
 
-      for (let i = bullets.length - 1; i >= 0; i--) {
-        const b = bullets[i];
+      for (const b of bullets) {
         b.x += b.dx || 0;
         b.y += b.dy;
-        if (b.y + b.h < 0 || b.x < -40 || b.x > W + 40) {
-          bullets.splice(i, 1);
-        }
       }
-
-      for (let i = enemyBullets.length - 1; i >= 0; i--) {
-        const eb = enemyBullets[i];
+      for (const eb of enemyBullets) {
         eb.x += eb.dx || 0;
         eb.y += eb.dy;
-        if (eb.y > H + 40) {
-          enemyBullets.splice(i, 1);
-        }
+      }
+
+      // remove off-screen bullets
+      for (let i = bullets.length - 1; i >= 0; i--) {
+        const b = bullets[i];
+        if (b.y + b.h < 0 || b.x < -40 || b.x > W + 40) bullets.splice(i, 1);
+      }
+      for (let i = enemyBullets.length - 1; i >= 0; i--) {
+        const eb = enemyBullets[i];
+        if (eb.y > H + 40) enemyBullets.splice(i, 1);
       }
 
       const moveNow = now;
@@ -561,9 +558,7 @@
         let hitEdge = false;
         for (const e of enemies) {
           e.x += enemyDx;
-          if (e.x <= 16 || e.x + e.w >= W - 16) {
-            hitEdge = true;
-          }
+          if (e.x <= 16 || e.x + e.w >= W - 16) hitEdge = true;
         }
 
         if (hitEdge) {
@@ -581,10 +576,11 @@
 
       enemyShoot();
 
-      // Bullet vs Enemy
+      // Bullet vs enemy
       for (let i = bullets.length - 1; i >= 0; i--) {
         const b = bullets[i];
         let hit = false;
+
         for (let j = enemies.length - 1; j >= 0; j--) {
           const e = enemies[j];
           if (
@@ -604,16 +600,14 @@
             hit = true;
 
             const piercing = now < upgrades.pierceUntil;
-            if (!piercing) {
-              bullets.splice(i, 1);
-            }
+            if (!piercing) bullets.splice(i, 1);
             break;
           }
         }
         if (hit && i >= bullets.length) continue;
       }
 
-      // Enemy bullet vs Player
+      // Enemy bullet vs player
       for (let i = enemyBullets.length - 1; i >= 0; i--) {
         const eb = enemyBullets[i];
         if (
@@ -636,9 +630,7 @@
             player.invincibleUntil = now + 1500;
             spawnExplosion(player.x + player.w / 2, player.y + player.h / 2, "#ffb74d");
             playSound("hit");
-            if (player.lives <= 0) {
-              gameOver();
-            }
+            if (player.lives <= 0) gameOver();
           }
         }
       }
@@ -663,16 +655,14 @@
         }
       }
 
-      // Explosion-Particles
+      // Explosion particles
       for (let i = particles.length - 1; i >= 0; i--) {
         const p = particles[i];
         p.x += p.dx;
         p.y += p.dy;
         p.age += dt;
         p.dy += 0.02;
-        if (p.age > p.life) {
-          particles.splice(i, 1);
-        }
+        if (p.age > p.life) particles.splice(i, 1);
       }
 
       updatePopups(dt);
@@ -685,13 +675,11 @@
     function updatePopups(dt) {
       for (let i = popups.length - 1; i >= 0; i--) {
         popups[i].age += dt;
-        if (popups[i].age > popups[i].life) {
-          popups.splice(i, 1);
-        }
+        if (popups[i].age > popups[i].life) popups.splice(i, 1);
       }
     }
 
-    // --- DRAW ---
+    // --- DRAW HELPERS ---
 
     function drawBackground() {
       if (backgroundImg.complete && backgroundImg.naturalWidth > 0) {
@@ -738,24 +726,18 @@
         if (img && img.complete) {
           ctx.drawImage(img, Math.round(e.x), Math.round(e.y), e.w, e.h);
         } else {
-          const bodyColor = "#1976d2";
-          const faceColor = "#ffeb3b";
-          drawPixelRect(e.x, e.y + 10, e.w, e.h - 10, bodyColor);
-          drawPixelRect(e.x + 6, e.y, e.w - 12, 10, faceColor);
+          drawPixelRect(e.x, e.y + 10, e.w, e.h - 10, "#1976d2");
+          drawPixelRect(e.x + 6, e.y, e.w - 12, 10, "#ffeb3b");
         }
       }
     }
 
     function drawBullets() {
-      for (const b of bullets) {
-        drawPixelRect(b.x, b.y, b.w, b.h, "#fff");
-      }
+      for (const b of bullets) drawPixelRect(b.x, b.y, b.w, b.h, "#fff");
     }
 
     function drawEnemyBullets() {
-      for (const eb of enemyBullets) {
-        drawPixelRect(eb.x, eb.y, eb.w, eb.h, "#ffeb3b");
-      }
+      for (const eb of enemyBullets) drawPixelRect(eb.x, eb.y, eb.w, eb.h, "#ffeb3b");
     }
 
     function drawParticles() {
@@ -775,7 +757,6 @@
         else if (p.type === "spread") color = "#ec407a";
         else if (p.type === "score") color = "#ffc107";
         else if (p.type === "life") color = "#ef5350";
-
         drawPixelRect(p.x, p.y, p.w, p.h, color);
       }
     }
@@ -842,6 +823,7 @@
     function drawMenu() {
       drawBackground();
 
+      // dark strip for readability
       ctx.fillStyle = "rgba(0,0,0,0.5)";
       ctx.fillRect(0, 120, W, 260);
 
@@ -851,13 +833,13 @@
       ctx.fillText("CAPITOL DEFENDER", W / 2, 170);
 
       ctx.font = "18px monospace";
-      ctx.fillText("Du spielst den roten Reformer,", W / 2, 210);
-      ctx.fillText("der blaue Bürokratie-Blöcke stoppt.", W / 2, 235);
+      ctx.fillText("You play the red reformer,", W / 2, 210);
+      ctx.fillText("stopping blue bureaucracy blocks.", W / 2, 235);
 
-      ctx.fillText("← / → : bewegen", W / 2, 270);
-      ctx.fillText("SPACE : schießen", W / 2, 295);
-      ctx.fillText("ENTER : Start", W / 2, 320);
-      ctx.fillText("M : Mute / Unmute", W / 2, 345);
+      ctx.fillText("← / → : move", W / 2, 270);
+      ctx.fillText("SPACE : shoot", W / 2, 295);
+      ctx.fillText("ENTER : start", W / 2, 320);
+      ctx.fillText("M : mute / unmute", W / 2, 345);
 
       ctx.fillText("HIGH SCORE: " + highScore, W / 2, 380);
 
@@ -887,7 +869,7 @@
 
       ctx.font = "18px monospace";
       ctx.fillText("Score: " + score, W / 2, H / 2 + 15);
-      ctx.fillText("Highscore: " + highScore, W / 2, H / 2 + 35);
+      ctx.fillText("High Score: " + highScore, W / 2, H / 2 + 35);
       ctx.fillText("Press R or Enter", W / 2, H / 2 + 55);
 
       ctx.textAlign = "left";
@@ -914,7 +896,6 @@
       requestAnimationFrame(loop);
     }
 
-    // Start
     initEnemiesForLevel();
     requestAnimationFrame(loop);
   </script>
