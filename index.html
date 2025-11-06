@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>Capitol Defender – Pixel Invaders</title>
+  <title>Capitol Defender – Ultimate</title>
   <style>
     * {
       box-sizing: border-box;
@@ -138,7 +138,7 @@
       osc.stop(now + duration);
     }
 
-    // --- PLAYER (roter Reformer, republikanisch inspiriert) ---
+    // --- PLAYER (roter Reformer) ---
     const player = {
       x: W / 2 - 5,
       y: H - 16,
@@ -149,11 +149,14 @@
       invincibleUntil: 0,
     };
 
-    // Upgrades
+    // Upgrades mit Dauer
     const upgrades = {
       rapidUntil: 0,
       doubleUntil: 0,
       shieldUntil: 0,
+      pierceUntil: 0,
+      spreadUntil: 0,
+      scoreMultUntil: 0,
     };
 
     // --- GAME DATA ---
@@ -165,6 +168,7 @@
     const enemies = [];
     const particles = [];
     const powerups = [];
+    const popups = []; // Text-Popups
 
     let enemyDx = 0.4;
     let enemyStepDown = 4;
@@ -200,6 +204,47 @@
       keys[e.key] = false;
     });
 
+    // --- LEVEL-TEXTE ---
+    const levelMessages = {
+      1: {
+        title: "LEVEL 1 – FIRST FILIBUSTER",
+        subtitle: "Die erste Welle blauer Formulare rollt an."
+      },
+      2: {
+        title: "LEVEL 2 – TAX STORM",
+        subtitle: "Neue Abgaben, noch mehr Akten – halte dagegen."
+      },
+      3: {
+        title: "LEVEL 3 – REGULATION FLOOD",
+        subtitle: "Die Bürokratie flutet das Capitol."
+      },
+      4: {
+        title: "LEVEL 4 – COMMITTEE CHAOS",
+        subtitle: "Sitzungen endlos, Geduld nicht."
+      },
+      5: {
+        title: "LEVEL 5 – SWAMP BOSS",
+        subtitle: "Der Sumpf wirft alles, was er hat."
+      }
+    };
+
+    function addPopup(title, subtitle, life = 2500) {
+      popups.push({
+        title,
+        subtitle,
+        age: 0,
+        life
+      });
+    }
+
+    function showLevelPopup() {
+      const msg = levelMessages[level] || {
+        title: "LEVEL " + level,
+        subtitle: "Die Bürokratie wird dichter."
+      };
+      addPopup(msg.title, msg.subtitle, 2600);
+    }
+
     // --- INITIAL ENEMIES: blaue Bürokratie-Blöcke ---
     function initEnemiesForLevel() {
       enemies.length = 0;
@@ -220,7 +265,7 @@
             y,
             w: 9,
             h: 7,
-            type: "blue", // alle Gegner = blaue Bürokratie
+            type: "blue",
           });
         }
       }
@@ -231,15 +276,20 @@
     }
 
     // --- POWERUPS ---
+    // Typen: rapid, double, shield, pierce, spread, score, life
     function spawnPowerup(x, y) {
       const overallChance = 0.25;
       if (Math.random() > overallChance) return;
 
       let type;
       const r = Math.random();
-      if (r < 0.33) type = "rapid";
-      else if (r < 0.66) type = "double";
-      else type = "shield";
+      if (r < 0.2) type = "rapid";
+      else if (r < 0.4) type = "double";
+      else if (r < 0.55) type = "shield";
+      else if (r < 0.7) type = "pierce";
+      else if (r < 0.85) type = "spread";
+      else if (r < 0.95) type = "score";
+      else type = "life";
 
       powerups.push({
         x: x + 1,
@@ -254,10 +304,30 @@
     function applyPowerup(type, now) {
       if (type === "rapid") {
         upgrades.rapidUntil = now + 8000;
+        addPopup("Power-up: Rapid Fire", "Signifikant höhere Feuerrate.", 1800);
       } else if (type === "double") {
         upgrades.doubleUntil = now + 8000;
+        addPopup("Power-up: Double Shot", "Zwei Schüsse gleichzeitig.", 1800);
       } else if (type === "shield") {
         upgrades.shieldUntil = now + 10000;
+        addPopup("Power-up: Shield", "Ein Treffer wird komplett geblockt.", 1800);
+      } else if (type === "pierce") {
+        upgrades.pierceUntil = now + 8000;
+        addPopup("Power-up: Pierce Shot", "Schüsse durchschlagen Gegner.", 1800);
+      } else if (type === "spread") {
+        upgrades.spreadUntil = now + 8000;
+        addPopup("Power-up: Spread Shot", "Dreifacher Streuschuss.", 1800);
+      } else if (type === "score") {
+        upgrades.scoreMultUntil = now + 10000;
+        addPopup("Power-up: Score Boost", "Doppelter Score für Abschüsse.", 1800);
+      } else if (type === "life") {
+        if (player.lives < 6) {
+          player.lives++;
+          addPopup("Extra Life", "Ein zusätzliches Leben.", 1800);
+        } else {
+          score += 50;
+          addPopup("Bonus Score", "+50 Punkte statt Leben.", 1800);
+        }
       }
       playSound("powerup");
     }
@@ -294,13 +364,41 @@
       if (now - lastPlayerShotTime < cooldown) return;
 
       const doubleShot = now < upgrades.doubleUntil;
+      const spreadShot = now < upgrades.spreadUntil;
 
-      if (doubleShot) {
+      if (spreadShot) {
+        // Dreifach-Schuss mit leichter Streuung
+        bullets.push({
+          x: player.x + player.w / 2 - 1,
+          y: player.y - 3,
+          w: 2,
+          h: 4,
+          dx: 0,
+          dy: -2.6,
+        });
+        bullets.push({
+          x: player.x + player.w / 2 - 1,
+          y: player.y - 3,
+          w: 2,
+          h: 4,
+          dx: -0.8,
+          dy: -2.4,
+        });
+        bullets.push({
+          x: player.x + player.w / 2 - 1,
+          y: player.y - 3,
+          w: 2,
+          h: 4,
+          dx: 0.8,
+          dy: -2.4,
+        });
+      } else if (doubleShot) {
         bullets.push({
           x: player.x + 2,
           y: player.y - 3,
           w: 2,
           h: 4,
+          dx: 0,
           dy: -2.8,
         });
         bullets.push({
@@ -308,6 +406,7 @@
           y: player.y - 3,
           w: 2,
           h: 4,
+          dx: 0,
           dy: -2.8,
         });
       } else {
@@ -316,6 +415,7 @@
           y: player.y - 3,
           w: 2,
           h: 4,
+          dx: 0,
           dy: -2.8,
         });
       }
@@ -346,6 +446,7 @@
         y: shooter.y + shooter.h,
         w: 2,
         h: 4,
+        dx: 0,
         dy: 1.3 + level * 0.2,
       });
 
@@ -362,14 +463,19 @@
       enemyBullets.length = 0;
       particles.length = 0;
       powerups.length = 0;
+      popups.length = 0;
       upgrades.rapidUntil = 0;
       upgrades.doubleUntil = 0;
       upgrades.shieldUntil = 0;
+      upgrades.pierceUntil = 0;
+      upgrades.spreadUntil = 0;
+      upgrades.scoreMultUntil = 0;
       initEnemiesForLevel();
       lastEnemyMoveTime = 0;
       lastEnemyShotTime = 0;
       lastTime = 0;
       state = GAME_STATE.PLAYING;
+      showLevelPopup();
     }
 
     function startNextLevel() {
@@ -378,16 +484,17 @@
       enemyBullets.length = 0;
       particles.length = 0;
       powerups.length = 0;
-      upgrades.rapidUntil = 0;
-      upgrades.doubleUntil = 0;
+      // Upgrades resetten außer Shield? Wir machen alles zeitbasiert, also einfach weiterlaufen lassen.
       initEnemiesForLevel();
       lastEnemyMoveTime = 0;
       lastEnemyShotTime = 0;
+      showLevelPopup();
     }
 
     function gameOver() {
       state = GAME_STATE.GAMEOVER;
       playSound("explosion");
+      addPopup("Capitol verloren.", "Die Bürokratie war diesmal stärker.", 2600);
       if (score > highScore) {
         highScore = score;
         try {
@@ -400,7 +507,11 @@
     let lastTime = 0;
 
     function update(dt) {
-      if (state !== GAME_STATE.PLAYING) return;
+      if (state !== GAME_STATE.PLAYING) {
+        // Popups trotzdem altern lassen
+        updatePopups(dt);
+        return;
+      }
 
       const now = performance.now();
 
@@ -417,8 +528,9 @@
       // Player bullets
       for (let i = bullets.length - 1; i >= 0; i--) {
         const b = bullets[i];
+        b.x += b.dx || 0;
         b.y += b.dy;
-        if (b.y + b.h < 0) {
+        if (b.y + b.h < 0 || b.x < -10 || b.x > W + 10) {
           bullets.splice(i, 1);
         }
       }
@@ -426,6 +538,7 @@
       // Enemy bullets
       for (let i = enemyBullets.length - 1; i >= 0; i--) {
         const eb = enemyBullets[i];
+        eb.x += eb.dx || 0;
         eb.y += eb.dy;
         if (eb.y > H) {
           enemyBullets.splice(i, 1);
@@ -474,14 +587,24 @@
             spawnExplosion(e.x + e.w / 2, e.y + e.h / 2, "#64b5f6");
             spawnPowerup(e.x, e.y);
             enemies.splice(j, 1);
-            bullets.splice(i, 1);
-            score += 10;
+
+            const mult = now < upgrades.scoreMultUntil ? 2 : 1;
+            score += 10 * mult;
+
             playSound("explosion");
             hit = true;
+
+            const piercing = now < upgrades.pierceUntil;
+            if (!piercing) {
+              bullets.splice(i, 1);
+            }
             break;
           }
         }
-        if (hit) continue;
+        if (hit && i >= bullets.length) {
+          // Bullet wurde ggf. entfernt, also nichts mehr tun
+          continue;
+        }
       }
 
       // Enemy bullet vs Player
@@ -546,9 +669,21 @@
         }
       }
 
+      // Popups
+      updatePopups(dt);
+
       // Alle Gegner weg -> nächstes Level
       if (enemies.length === 0 && state === GAME_STATE.PLAYING) {
         startNextLevel();
+      }
+    }
+
+    function updatePopups(dt) {
+      for (let i = popups.length - 1; i >= 0; i--) {
+        popups[i].age += dt;
+        if (popups[i].age > popups[i].life) {
+          popups.splice(i, 1);
+        }
       }
     }
 
@@ -561,6 +696,44 @@
       ctx.restore();
     }
 
+    // Capitol-Hintergrund
+    function drawCapitolBackground() {
+      // Himmel
+      drawPixelRect(0, 0, W, H, "#020816");
+      // Sterne
+      for (let i = 0; i < 20; i++) {
+        const sx = (i * 23) % W;
+        const sy = (i * 11) % 40;
+        drawPixelRect(sx, sy, 1, 1, "#cfd8dc", 0.5);
+      }
+
+      // Boden
+      const groundY = H - 18;
+      drawPixelRect(0, groundY, W, 18, "#081c0c");
+
+      const centerX = W / 2;
+
+      // Seitenflügel
+      drawPixelRect(centerX - 48, groundY - 10, 28, 8, "#e0e0e0");
+      drawPixelRect(centerX + 20, groundY - 10, 28, 8, "#e0e0e0");
+
+      // Hauptgebäude
+      drawPixelRect(centerX - 30, groundY - 12, 60, 10, "#f5f5f5");
+
+      // Säulen
+      for (let i = -24; i <= 24; i += 8) {
+        drawPixelRect(centerX + i, groundY - 12, 3, 10, "#d0d0d0");
+      }
+
+      // Kuppel
+      drawPixelRect(centerX - 12, groundY - 22, 24, 6, "#e0e0e0");
+      drawPixelRect(centerX - 8, groundY - 24, 16, 2, "#f5f5f5");
+      drawPixelRect(centerX - 2, groundY - 27, 4, 3, "#fafafa");
+      // kleine Fahne
+      drawPixelRect(centerX + 1, groundY - 30, 1, 3, "#b0bec5");
+      drawPixelRect(centerX + 2, groundY - 29, 3, 1, "#b71c1c");
+    }
+
     function drawPlayer() {
       const now = performance.now();
       const flashing = now < player.invincibleUntil && Math.floor(now / 100) % 2 === 0;
@@ -571,11 +744,11 @@
 
       if (flashing) return;
 
-      // Körper in rot-grau (konservativer Reformer)
+      // Körper in rot
       drawPixelRect(player.x, player.y + 3, player.w, player.h - 3, "#b71c1c");
       // Kopf
       drawPixelRect(player.x + 3, player.y, 4, 3, "#f5d7b3");
-      // Krawatte (hellrot)
+      // Krawatte
       drawPixelRect(player.x + player.w / 2 - 1, player.y + 4, 2, 3, "#ff5252");
       // Schultern
       drawPixelRect(player.x + 1, player.y + 3, player.w - 2, 2, "#d32f2f");
@@ -583,7 +756,7 @@
 
     function drawEnemies() {
       for (const e of enemies) {
-        const bodyColor = "#1976d2";  // blau = Bürokratie
+        const bodyColor = "#1976d2";
         const faceColor = "#ffeb3b";
 
         drawPixelRect(e.x, e.y + 3, e.w, e.h - 3, bodyColor);
@@ -620,6 +793,10 @@
         if (p.type === "rapid") color = "#ff9800";
         else if (p.type === "double") color = "#ab47bc";
         else if (p.type === "shield") color = "#80deea";
+        else if (p.type === "pierce") color = "#8bc34a";
+        else if (p.type === "spread") color = "#ec407a";
+        else if (p.type === "score") color = "#ffc107";
+        else if (p.type === "life") color = "#ef5350";
 
         drawPixelRect(p.x, p.y, p.w, p.h, color);
       }
@@ -650,28 +827,51 @@
       const now = performance.now();
       ctx.fillText("PWR:", 4, 32);
 
-      if (now < upgrades.rapidUntil) {
-        drawPixelRect(24, 28, 4, 4, "#ff9800");
+      let iconIndex = 0;
+      function icon(active, color) {
+        if (!active) return;
+        drawPixelRect(24 + iconIndex * 6, 28, 4, 4, color);
+        iconIndex++;
       }
-      if (now < upgrades.doubleUntil) {
-        drawPixelRect(30, 28, 4, 4, "#ab47bc");
-      }
-      if (now < upgrades.shieldUntil) {
-        drawPixelRect(36, 28, 4, 4, "#80deea");
-      }
+
+      icon(now < upgrades.rapidUntil, "#ff9800");
+      icon(now < upgrades.doubleUntil, "#ab47bc");
+      icon(now < upgrades.shieldUntil, "#80deea");
+      icon(now < upgrades.pierceUntil, "#8bc34a");
+      icon(now < upgrades.spreadUntil, "#ec407a");
+      icon(now < upgrades.scoreMultUntil, "#ffc107");
     }
 
-    // kleines Flaggen-Background im Menü
+    function drawPopups() {
+      if (!popups.length) return;
+      const p = popups[0];
+
+      ctx.save();
+      ctx.fillStyle = "rgba(0, 0, 0, 0.7)";
+      ctx.fillRect(W / 2 - 55, H / 2 - 20, 110, 40);
+
+      ctx.fillStyle = "#fff";
+      ctx.textAlign = "center";
+      ctx.font = "7px monospace";
+      ctx.fillText(p.title, W / 2, H / 2 - 4);
+
+      if (p.subtitle) {
+        ctx.font = "5px monospace";
+        ctx.fillText(p.subtitle, W / 2, H / 2 + 6);
+      }
+
+      ctx.textAlign = "left";
+      ctx.restore();
+    }
+
+    // Menü-Hintergrund (Flaggen-Optik)
     function drawMenuBackground() {
-      // dunkler Hintergrund
       drawPixelRect(0, 0, W, H, "#000");
 
-      // rote Streifen
       for (let i = 0; i < 5; i++) {
         drawPixelRect(0, 10 + i * 10, W, 4, "#b71c1c", 0.5);
       }
 
-      // "Sternenfeld" links oben
       drawPixelRect(5, 8, 45, 30, "#0d47a1", 0.7);
       for (let r = 0; r < 4; r++) {
         for (let c = 0; c < 6; c++) {
@@ -692,22 +892,22 @@
       ctx.fillText("CAPITOL DEFENDER", W / 2, 40);
 
       ctx.font = "6px monospace";
-      ctx.fillText("Du spielst den roten Reformer", W / 2, 55);
-      ctx.fillText("(republikanisch inspiriert),", W / 2, 63);
-      ctx.fillText("der blaue Bürokratie-Blöcke stoppt.", W / 2, 71);
+      ctx.fillText("Du spielst den roten Reformer,", W / 2, 55);
+      ctx.fillText("der blaue Bürokratie-Blöcke stoppt.", W / 2, 63);
 
-      ctx.fillText("← / → : bewegen", W / 2, 88);
-      ctx.fillText("SPACE : schießen", W / 2, 96);
-      ctx.fillText("ENTER : Start", W / 2, 104);
-      ctx.fillText("M : Mute / Unmute", W / 2, 112);
+      ctx.fillText("← / → : bewegen", W / 2, 82);
+      ctx.fillText("SPACE : schießen", W / 2, 90);
+      ctx.fillText("ENTER : Start", W / 2, 98);
+      ctx.fillText("M : Mute / Unmute", W / 2, 106);
 
-      ctx.fillText("HIGH SCORE: " + highScore, W / 2, 126);
+      ctx.fillText("HIGH SCORE: " + highScore, W / 2, 122);
 
       ctx.textAlign = "left";
     }
 
     function drawGame() {
       ctx.clearRect(0, 0, W, H);
+      drawCapitolBackground();
       drawEnemies();
       drawEnemyBullets();
       drawBullets();
@@ -715,6 +915,7 @@
       drawPlayer();
       drawParticles();
       drawHUD();
+      drawPopups();
     }
 
     function drawGameOverScreen() {
@@ -742,10 +943,12 @@
 
       if (state === GAME_STATE.MENU) {
         drawMenu();
+        updatePopups(dt);
       } else if (state === GAME_STATE.PLAYING) {
         update(dt);
         drawGame();
       } else if (state === GAME_STATE.GAMEOVER) {
+        updatePopups(dt);
         drawGame();
         drawGameOverScreen();
       }
@@ -753,7 +956,7 @@
       requestAnimationFrame(loop);
     }
 
-    // Start mit Menü-Bildschirm
+    // Start
     initEnemiesForLevel();
     requestAnimationFrame(loop);
   </script>
