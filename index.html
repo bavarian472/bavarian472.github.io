@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>Pixel Invaders+</title>
+  <title>Pixel Invaders Deluxe</title>
   <style>
     * {
       box-sizing: border-box;
@@ -48,7 +48,7 @@
 
   <div id="info">
     <strong>Controls:</strong> ← / → bewegen, <strong>Space</strong> schießen,
-    <strong>Enter</strong> starten, <strong>R</strong> Restart.
+    <strong>Enter</strong> starten, <strong>R</strong> Restart, <strong>M</strong> Mute.
   </div>
 
   <script>
@@ -66,13 +66,77 @@
 
     let state = GAME_STATE.MENU;
 
-    // Highscore (persistent)
+    // Highscore
     let highScore = 0;
     try {
       const saved = localStorage.getItem("pixelInvadersHighScore");
       if (saved) highScore = parseInt(saved, 10) || 0;
     } catch (_) {
       highScore = 0;
+    }
+
+    // Audio
+    let audioCtx = null;
+    let muted = false;
+
+    function initAudio() {
+      if (!audioCtx) {
+        const AC = window.AudioContext || window.webkitAudioContext;
+        if (AC) audioCtx = new AC();
+      }
+    }
+
+    function playSound(type) {
+      if (muted) return;
+      initAudio();
+      if (!audioCtx) return;
+
+      const now = audioCtx.currentTime;
+      const osc = audioCtx.createOscillator();
+      const gain = audioCtx.createGain();
+
+      osc.connect(gain);
+      gain.connect(audioCtx.destination);
+
+      // Defaults
+      osc.type = "square";
+      let duration = 0.12;
+
+      if (type === "laser") {
+        osc.frequency.setValueAtTime(800, now);
+        osc.frequency.exponentialRampToValueAtTime(200, now + duration);
+        gain.gain.setValueAtTime(0.25, now);
+        gain.gain.exponentialRampToValueAtTime(0.001, now + duration);
+      } else if (type === "explosion") {
+        osc.type = "sawtooth";
+        duration = 0.25;
+        osc.frequency.setValueAtTime(120, now);
+        osc.frequency.exponentialRampToValueAtTime(40, now + duration);
+        gain.gain.setValueAtTime(0.4, now);
+        gain.gain.exponentialRampToValueAtTime(0.001, now + duration);
+      } else if (type === "hit") {
+        osc.frequency.setValueAtTime(300, now);
+        osc.frequency.exponentialRampToValueAtTime(100, now + duration);
+        gain.gain.setValueAtTime(0.35, now);
+        gain.gain.exponentialRampToValueAtTime(0.001, now + duration);
+      } else if (type === "powerup") {
+        osc.type = "triangle";
+        duration = 0.25;
+        osc.frequency.setValueAtTime(300, now);
+        osc.frequency.linearRampToValueAtTime(600, now + duration);
+        gain.gain.setValueAtTime(0.3, now);
+        gain.gain.exponentialRampToValueAtTime(0.001, now + duration);
+      } else if (type === "shieldBreak") {
+        osc.type = "sawtooth";
+        duration = 0.2;
+        osc.frequency.setValueAtTime(500, now);
+        osc.frequency.linearRampToValueAtTime(150, now + duration);
+        gain.gain.setValueAtTime(0.4, now);
+        gain.gain.exponentialRampToValueAtTime(0.001, now + duration);
+      }
+
+      osc.start(now);
+      osc.stop(now + duration);
     }
 
     // --- PLAYER ---
@@ -86,15 +150,24 @@
       invincibleUntil: 0,
     };
 
+    // Upgrades
+    const upgrades = {
+      rapidUntil: 0,
+      doubleUntil: 0,
+      shieldUntil: 0,
+    };
+
     // --- GAME DATA ---
     let level = 1;
     let score = 0;
 
-    const bullets = [];      // player bullets
-    const enemyBullets = []; // enemy bullets
+    const bullets = [];       // player bullets
+    const enemyBullets = [];  // enemy bullets
     const enemies = [];
+    const particles = [];     // explosion particles
+    const powerups = [];      // falling upgrades
 
-    let enemyDx = 0.4;       // horizontal speed
+    let enemyDx = 0.4;        // horizontal speed
     let enemyStepDown = 4;
     let lastEnemyMoveTime = 0;
 
@@ -105,6 +178,11 @@
 
     window.addEventListener("keydown", (e) => {
       keys[e.key] = true;
+
+      if (e.key === "m" || e.key === "M") {
+        muted = !muted;
+        if (!muted) playSound("powerup");
+      }
 
       if (state === GAME_STATE.MENU && (e.key === "Enter")) {
         startNewGame();
@@ -127,7 +205,7 @@
     function initEnemiesForLevel() {
       enemies.length = 0;
 
-      const enemyRows = 3 + Math.min(level - 1, 2); // 3 bis max 5 Reihen
+      const enemyRows = 3 + Math.min(level - 1, 2); // 3–5 Reihen
       const enemyCols = 7;
       const enemySpacingX = 14;
       const enemySpacingY = 12;
@@ -153,23 +231,98 @@
       enemyShootInterval = Math.max(450, 1200 - (level - 1) * 120);
     }
 
+    // --- POWERUPS ---
+    function spawnPowerup(x, y) {
+      const overallChance = 0.25; // 25% Chance überhaupt eins zu droppen
+      if (Math.random() > overallChance) return;
+
+      let type;
+      const r = Math.random();
+      if (r < 0.33) type = "rapid";
+      else if (r < 0.66) type = "double";
+      else type = "shield";
+
+      powerups.push({
+        x: x + 1,
+        y: y,
+        w: 6,
+        h: 6,
+        dy: 0.6,
+        type,
+      });
+    }
+
+    function applyPowerup(type, now) {
+      if (type === "rapid") {
+        upgrades.rapidUntil = now + 8000; // 8s
+      } else if (type === "double") {
+        upgrades.doubleUntil = now + 8000;
+      } else if (type === "shield") {
+        upgrades.shieldUntil = now + 10000; // 10s
+      }
+      playSound("powerup");
+    }
+
+    // --- EXPLOSIONS ---
+    function spawnExplosion(x, y, color) {
+      for (let i = 0; i < 14; i++) {
+        const angle = Math.random() * Math.PI * 2;
+        const speed = Math.random() * 1.4 + 0.3;
+        particles.push({
+          x,
+          y,
+          dx: Math.cos(angle) * speed,
+          dy: Math.sin(angle) * speed,
+          life: 400, // ms
+          age: 0,
+          color,
+        });
+      }
+    }
+
     // --- PLAYER SHOOT ---
     let lastPlayerShotTime = 0;
-    const playerShootCooldown = 250;
+    const baseShootCooldown = 250;
+
+    function getPlayerShootCooldown(now) {
+      if (now < upgrades.rapidUntil) return baseShootCooldown * 0.4;
+      return baseShootCooldown;
+    }
 
     function shootPlayer() {
       const now = performance.now();
-      if (now - lastPlayerShotTime < playerShootCooldown) return;
+      const cooldown = getPlayerShootCooldown(now);
+      if (now - lastPlayerShotTime < cooldown) return;
 
-      bullets.push({
-        x: player.x + player.w / 2 - 1,
-        y: player.y - 3,
-        w: 2,
-        h: 4,
-        dy: -2.8,
-      });
+      const doubleShot = now < upgrades.doubleUntil;
+
+      if (doubleShot) {
+        bullets.push({
+          x: player.x + 2,
+          y: player.y - 3,
+          w: 2,
+          h: 4,
+          dy: -2.8,
+        });
+        bullets.push({
+          x: player.x + player.w - 4,
+          y: player.y - 3,
+          w: 2,
+          h: 4,
+          dy: -2.8,
+        });
+      } else {
+        bullets.push({
+          x: player.x + player.w / 2 - 1,
+          y: player.y - 3,
+          w: 2,
+          h: 4,
+          dy: -2.8,
+        });
+      }
 
       lastPlayerShotTime = now;
+      playSound("laser");
     }
 
     // --- ENEMY SHOOT ---
@@ -178,7 +331,6 @@
       const now = performance.now();
       if (now - lastEnemyShotTime < enemyShootInterval) return;
 
-      // Wähle zufälligen "untersten" Gegner pro Zufall aus
       const bottomEnemiesByCol = {};
       for (const e of enemies) {
         const colKey = Math.round(e.x / 10);
@@ -209,6 +361,11 @@
       player.x = W / 2 - player.w / 2;
       bullets.length = 0;
       enemyBullets.length = 0;
+      particles.length = 0;
+      powerups.length = 0;
+      upgrades.rapidUntil = 0;
+      upgrades.doubleUntil = 0;
+      upgrades.shieldUntil = 0;
       initEnemiesForLevel();
       lastEnemyMoveTime = 0;
       lastEnemyShotTime = 0;
@@ -220,13 +377,19 @@
       level++;
       bullets.length = 0;
       enemyBullets.length = 0;
+      particles.length = 0;
+      powerups.length = 0;
+      upgrades.rapidUntil = 0;
+      upgrades.doubleUntil = 0;
+      // Shield lassen wir, wenn es noch läuft
       initEnemiesForLevel();
       lastEnemyMoveTime = 0;
       lastEnemyShotTime = 0;
     }
 
-    function gameOver(win) {
+    function gameOver() {
       state = GAME_STATE.GAMEOVER;
+      playSound("explosion");
       if (score > highScore) {
         highScore = score;
         try {
@@ -268,7 +431,6 @@
         eb.y += eb.dy;
         if (eb.y > H) {
           enemyBullets.splice(i, 1);
-          continue;
         }
       }
 
@@ -288,8 +450,7 @@
           for (const e of enemies) {
             e.y += enemyStepDown;
             if (e.y + e.h >= player.y) {
-              // Gegner sind unten angekommen -> Game Over
-              gameOver(false);
+              gameOver();
             }
           }
         }
@@ -312,9 +473,12 @@
             b.y < e.y + e.h &&
             b.y + b.h > e.y
           ) {
+            spawnExplosion(e.x + e.w / 2, e.y + e.h / 2, e.type === "red" ? "#ff5252" : "#64b5f6");
+            spawnPowerup(e.x, e.y);
             enemies.splice(j, 1);
             bullets.splice(i, 1);
             score += 10;
+            playSound("explosion");
             hit = true;
             break;
           }
@@ -331,17 +495,59 @@
           eb.y < player.y + player.h &&
           eb.y + eb.h > player.y
         ) {
-          // Treffer
-          if (now > player.invincibleUntil) {
-            enemyBullets.splice(i, 1);
-            player.lives--;
-            player.invincibleUntil = now + 1500; // 1.5s unverwundbar
-            if (player.lives <= 0) {
-              gameOver(false);
-            }
-          } else {
-            enemyBullets.splice(i, 1);
+          enemyBullets.splice(i, 1);
+
+          // Shield aktiv?
+          if (now < upgrades.shieldUntil) {
+            upgrades.shieldUntil = 0;
+            spawnExplosion(player.x + player.w / 2, player.y + player.h / 2, "#80deea");
+            playSound("shieldBreak");
+            continue;
           }
+
+          if (now > player.invincibleUntil) {
+            player.lives--;
+            player.invincibleUntil = now + 1500;
+            spawnExplosion(player.x + player.w / 2, player.y + player.h / 2, "#ffb74d");
+            playSound("hit");
+            if (player.lives <= 0) {
+              gameOver();
+            }
+          }
+        }
+      }
+
+      // Powerups updaten
+      for (let i = powerups.length - 1; i >= 0; i--) {
+        const p = powerups[i];
+        p.y += p.dy;
+        if (p.y > H) {
+          powerups.splice(i, 1);
+          continue;
+        }
+
+        // Kollisionscheck mit Player
+        if (
+          p.x < player.x + player.w &&
+          p.x + p.w > player.x &&
+          p.y < player.y + player.h &&
+          p.y + p.h > player.y
+        ) {
+          applyPowerup(p.type, now);
+          powerups.splice(i, 1);
+        }
+      }
+
+      // Explosion-Particles
+      for (let i = particles.length - 1; i >= 0; i--) {
+        const p = particles[i];
+        p.x += p.dx;
+        p.y += p.dy;
+        p.age += dt;
+        // leichte "Gravitation"
+        p.dy += 0.01;
+        if (p.age > p.life) {
+          particles.splice(i, 1);
         }
       }
 
@@ -352,16 +558,24 @@
     }
 
     // --- DRAW HELPERS ---
-    function drawPixelRect(x, y, w, h, color) {
+    function drawPixelRect(x, y, w, h, color, alpha = 1) {
+      ctx.save();
+      ctx.globalAlpha = alpha;
       ctx.fillStyle = color;
       ctx.fillRect(Math.round(x), Math.round(y), w, h);
+      ctx.restore();
     }
 
     function drawPlayer() {
       const now = performance.now();
       const flashing = now < player.invincibleUntil && Math.floor(now / 100) % 2 === 0;
 
-      if (flashing) return; // kurz "blinken", wenn getroffen
+      // Shield Aura
+      if (now < upgrades.shieldUntil) {
+        drawPixelRect(player.x - 2, player.y - 2, player.w + 4, player.h + 4, "#80deea", 0.25);
+      }
+
+      if (flashing) return;
 
       // Körper (Anzug)
       drawPixelRect(player.x, player.y + 3, player.w, player.h - 3, "#777");
@@ -382,10 +596,10 @@
         drawPixelRect(e.x, e.y + 3, e.w, e.h - 3, bodyColor);
         // Kopf
         drawPixelRect(e.x + 2, e.y, e.w - 4, 3, faceColor);
-        // "Augen"
+        // Augen
         drawPixelRect(e.x + 3, e.y + 1, 1, 1, "#000");
         drawPixelRect(e.x + e.w - 4, e.y + 1, 1, 1, "#000");
-        // kleine "Arme"
+        // Arme
         drawPixelRect(e.x - 1, e.y + 4, 2, 2, bodyColor);
         drawPixelRect(e.x + e.w - 1, e.y + 4, 2, 2, bodyColor);
       }
@@ -403,6 +617,24 @@
       }
     }
 
+    function drawParticles() {
+      for (const p of particles) {
+        const alpha = 1 - p.age / p.life;
+        drawPixelRect(p.x, p.y, 2, 2, p.color, alpha);
+      }
+    }
+
+    function drawPowerups() {
+      for (const p of powerups) {
+        let color = "#fff";
+        if (p.type === "rapid") color = "#ff9800";
+        else if (p.type === "double") color = "#ab47bc";
+        else if (p.type === "shield") color = "#80deea";
+
+        drawPixelRect(p.x, p.y, p.w, p.h, color);
+      }
+    }
+
     function drawHUD() {
       ctx.fillStyle = "#fff";
       ctx.font = "6px monospace";
@@ -416,10 +648,25 @@
         drawPixelRect(92 + i * 6, 3, 4, 4, "#e53935");
       }
 
-      // Highscore rechts oben
+      // Highscore & mute
       ctx.textAlign = "right";
       ctx.fillText("HI: " + highScore, W - 4, 8);
+      ctx.fillText(muted ? "MUTE" : "SOUND", W - 4, 16);
       ctx.textAlign = "left";
+
+      // Powerup-Status
+      const now = performance.now();
+      ctx.fillText("PWR:", 4, 24);
+
+      if (now < upgrades.rapidUntil) {
+        drawPixelRect(24, 20, 4, 4, "#ff9800");
+      }
+      if (now < upgrades.doubleUntil) {
+        drawPixelRect(30, 20, 4, 4, "#ab47bc");
+      }
+      if (now < upgrades.shieldUntil) {
+        drawPixelRect(36, 20, 4, 4, "#80deea");
+      }
     }
 
     function drawMenu() {
@@ -430,14 +677,15 @@
       ctx.fillStyle = "#fff";
       ctx.textAlign = "center";
       ctx.font = "12px monospace";
-      ctx.fillText("PIXEL INVADERS+", W / 2, 40);
+      ctx.fillText("PIXEL INVADERS DELUXE", W / 2, 40);
 
       ctx.font = "6px monospace";
       ctx.fillText("← / → : move", W / 2, 60);
       ctx.fillText("SPACE : shoot", W / 2, 70);
       ctx.fillText("ENTER : start", W / 2, 80);
+      ctx.fillText("M : mute/unmute", W / 2, 90);
 
-      ctx.fillText("HIGH SCORE: " + highScore, W / 2, 100);
+      ctx.fillText("HIGH SCORE: " + highScore, W / 2, 105);
 
       ctx.textAlign = "left";
     }
@@ -447,7 +695,9 @@
       drawEnemies();
       drawEnemyBullets();
       drawBullets();
+      drawPowerups();
       drawPlayer();
+      drawParticles();
       drawHUD();
     }
 
@@ -488,7 +738,7 @@
     }
 
     // Start mit Menü-Bildschirm
-    initEnemiesForLevel(); // vorbereiten, auch wenn noch nicht gespielt
+    initEnemiesForLevel();
     requestAnimationFrame(loop);
   </script>
 </body>
