@@ -130,8 +130,7 @@
     const logoImg = new Image();
     logoImg.src = "logo.png";
 
-    // optional: backgroundImg wird nicht mehr zum Zeichnen genutzt,
-    // aber lassen wir drin falls du später noch was brauchst
+    // optional: backgroundImg wird nicht mehr direkt zum Zeichnen genutzt
     const backgroundImg = new Image();
     backgroundImg.src = "background.png";
 
@@ -364,7 +363,7 @@
       addPopup(msg.title, msg.subtitle, 2600);
     }
 
-    // --- ENEMIES (bit bigger + more spacing) ---
+    // --- ENEMIES (bit bigger + more spacing, now with path variety) ---
     function initEnemiesForLevel() {
       enemies.length = 0;
 
@@ -382,11 +381,15 @@
           const x = enemyStartX + col * enemySpacingX;
           const y = enemyStartY + row * enemySpacingY;
           enemies.push({
+            baseX: x,              // formation center
+            baseY: y,
             x,
             y,
             w: enemyW,
             h: enemyH,
             spriteIndex: Math.floor(Math.random() * enemyImages.length),
+            phase: Math.random() * Math.PI * 2,          // for desync
+            pathType: Math.floor(Math.random() * 3)      // 0,1,2 -> different wobble
           });
         }
       }
@@ -515,7 +518,8 @@
 
       const bottomEnemiesByCol = {};
       for (const e of enemies) {
-        const colKey = Math.round(e.x / 90);
+        // use baseX for more stable column grouping
+        const colKey = Math.round(e.baseX / 90);
         if (!bottomEnemiesByCol[colKey] || bottomEnemiesByCol[colKey].y < e.y) {
           bottomEnemiesByCol[colKey] = e;
         }
@@ -620,19 +624,21 @@
         if (eb.y > H + 50) enemyBullets.splice(i, 1);
       }
 
+      // --- enemy formation movement + individual paths ---
       const moveNow = now;
       if (moveNow - lastEnemyMoveTime > 20) {
         let hitEdge = false;
+        // Move formation base positions left/right
         for (const e of enemies) {
-          e.x += enemyDx;
-          if (e.x <= 16 || e.x + e.w >= W - 16) hitEdge = true;
+          e.baseX += enemyDx;
+          if (e.baseX <= 16 || e.baseX + e.w >= W - 16) hitEdge = true;
         }
 
         if (hitEdge) {
           enemyDx = -enemyDx;
           for (const e of enemies) {
-            e.y += enemyStepDown;
-            if (e.y + e.h >= player.y) {
+            e.baseY += enemyStepDown;
+            if (e.baseY + e.h >= player.y) {
               gameOver();
             }
           }
@@ -640,6 +646,31 @@
 
         lastEnemyMoveTime = moveNow;
       }
+
+      // Apply per-enemy wobble paths
+      const t = now / 1000; // seconds
+      for (const e of enemies) {
+        let offsetX = 0;
+        let offsetY = 0;
+        const ampBase = 8 + level * 1.5; // gets a bit wilder later
+
+        switch (e.pathType) {
+          case 0: // horizontal wave
+            offsetX = Math.sin(t * 1.5 + e.phase) * ampBase;
+            break;
+          case 1: // vertical bob
+            offsetY = Math.sin(t * 2.0 + e.phase) * (ampBase * 0.8);
+            break;
+          case 2: // small circle / ellipse
+            offsetX = Math.sin(t * 1.2 + e.phase) * (ampBase * 0.9);
+            offsetY = Math.cos(t * 1.2 + e.phase) * (ampBase * 0.6);
+            break;
+        }
+
+        e.x = e.baseX + offsetX;
+        e.y = e.baseY + offsetY;
+      }
+      // --- end enemy movement ---
 
       enemyShoot();
 
