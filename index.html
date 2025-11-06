@@ -26,8 +26,9 @@
       image-rendering: crisp-edges;
       border: 3px solid #444;
       background: #000;
-      width: 640px;   /* 2x Skalierung */
-      height: 480px;  /* 2x Skalierung */
+      /* größere Anzeige (Canvas 400x300 wird 2x skaliert) */
+      width: 800px;
+      height: 600px;
       display: block;
     }
 
@@ -44,7 +45,8 @@
   </style>
 </head>
 <body>
-  <canvas id="game" width="320" height="240"></canvas>
+  <!-- größere Canvas-Größe -->
+  <canvas id="game" width="400" height="300"></canvas>
 
   <div id="info">
     <strong>Controls:</strong> ← / → bewegen, <strong>Space</strong> schießen,
@@ -94,8 +96,10 @@
 
     // --- AUDIO (SFX + music.mp3 mit Autoplay-Workaround) ---
 
-    const MUSIC_URL = "https://github.com/bavarian472/bavarian472.github.io/blob/main/music.mp3?raw=true"
-    
+    // HIER deine funktionierende RAW-URL eintragen:
+    // z.B. const MUSIC_URL = "https://github.com/user/repo/blob/main/music.mp3?raw=true";
+    const MUSIC_URL = "https://github.com/bavarian472/bavarian472.github.io/blob/main/music.mp3?raw=true";
+
     let audioCtx = null;          // SFX
     let muted = false;
     let bgMusic = null;           // music.mp3
@@ -125,13 +129,15 @@
         osc.connect(gain);
         gain.connect(audioCtx.destination);
 
-        osc.type = "square";
         let duration = 0.12;
 
         if (type === "laser") {
-          osc.frequency.setValueAtTime(800, now);
-          osc.frequency.exponentialRampToValueAtTime(200, now + duration);
-          gain.gain.setValueAtTime(0.25, now);
+          // mehr "Gunshot"-Vibe: kurzer, tieferer Knall statt hoher Laser
+          duration = 0.09;
+          osc.type = "square";
+          osc.frequency.setValueAtTime(280, now);
+          osc.frequency.exponentialRampToValueAtTime(80, now + duration);
+          gain.gain.setValueAtTime(0.6, now);
           gain.gain.exponentialRampToValueAtTime(0.001, now + duration);
         } else if (type === "explosion") {
           osc.type = "sawtooth";
@@ -141,8 +147,9 @@
           gain.gain.setValueAtTime(0.4, now);
           gain.gain.exponentialRampToValueAtTime(0.001, now + duration);
         } else if (type === "hit") {
-          osc.frequency.setValueAtTime(300, now);
-          osc.frequency.exponentialRampToValueAtTime(100, now + duration);
+          osc.type = "square";
+          osc.frequency.setValueAtTime(200, now);
+          osc.frequency.exponentialRampToValueAtTime(80, now + duration);
           gain.gain.setValueAtTime(0.35, now);
           gain.gain.exponentialRampToValueAtTime(0.001, now + duration);
         } else if (type === "powerup") {
@@ -210,13 +217,13 @@
     window.addEventListener("click", tryResumeMusic);
     window.addEventListener("keydown", tryResumeMusic);
 
-    // --- PLAYER ---
+    // --- PLAYER (leicht größer) ---
     const player = {
-      x: W / 2 - 8,
-      y: H - 28,
-      w: 16,
-      h: 16,
-      speed: 2.2,
+      x: W / 2 - 10,
+      y: H - 34,
+      w: 20,   // vorher 16
+      h: 20,   // vorher 16
+      speed: 2.4,
       lives: 3,
       invincibleUntil: 0,
       shootingUntil: 0,
@@ -244,7 +251,7 @@
     const popups = [];
 
     let enemyDx = 0.6;
-    let enemyStepDown = 8;
+    let enemyStepDown = 10;
     let lastEnemyMoveTime = 0;
 
     let enemyShootInterval = 1200;
@@ -299,16 +306,16 @@
       addPopup(msg.title, msg.subtitle, 2600);
     }
 
-    // --- ENEMIES ---
+    // --- ENEMIES (größer + etwas mehr Abstand) ---
     function initEnemiesForLevel() {
       enemies.length = 0;
 
       const enemyRows = 3 + Math.min(level - 1, 2);
       const enemyCols = 9;
-      const enemySpacingX = 24;
-      const enemySpacingY = 18;
-      const enemyStartX = 24;
-      const enemyStartY = 24;
+      const enemySpacingX = 28;   // vorher 24
+      const enemySpacingY = 22;   // vorher 18
+      const enemyStartX = 28;
+      const enemyStartY = 30;
 
       for (let row = 0; row < enemyRows; row++) {
         for (let col = 0; col < enemyCols; col++) {
@@ -317,20 +324,20 @@
           enemies.push({
             x,
             y,
-            w: 14,
-            h: 12,
+            w: 18,   // vorher 14
+            h: 16,   // vorher 12
             spriteIndex: Math.floor(Math.random() * enemyImages.length),
           });
         }
       }
 
-      enemyDx = 0.4 + level * 0.2;
+      enemyDx = 0.45 + level * 0.2;
       enemyShootInterval = Math.max(450, 1200 - (level - 1) * 120);
     }
 
-    // --- POWERUPS ---
+    // --- POWERUPS (seltener) ---
     function spawnPowerup(x, y) {
-      const overallChance = 0.25;
+      const overallChance = 0.12;   // vorher 0.25 → weniger Drops
       if (Math.random() > overallChance) return;
 
       let type;
@@ -403,7 +410,7 @@
 
     // --- PLAYER SHOOT ---
     let lastPlayerShotTime = 0;
-    const baseShootCooldown = 250;
+    const baseShootCooldown = 230;
 
     function getPlayerShootCooldown(now) {
       if (now < upgrades.rapidUntil) return baseShootCooldown * 0.4;
@@ -421,14 +428,14 @@
       player.shootingUntil = now + 150;
 
       if (spreadShot) {
-        bullets.push({ x: player.x + player.w / 2 - 1, y: player.y - 4, w: 3, h: 6, dx: 0,    dy: -3.4 });
-        bullets.push({ x: player.x + player.w / 2 - 1, y: player.y - 4, w: 3, h: 6, dx: -1.0, dy: -3.0 });
-        bullets.push({ x: player.x + player.w / 2 - 1, y: player.y - 4, w: 3, h: 6, dx: 1.0,  dy: -3.0 });
+        bullets.push({ x: player.x + player.w / 2 - 1, y: player.y - 4, w: 3, h: 6, dx: 0,    dy: -3.6 });
+        bullets.push({ x: player.x + player.w / 2 - 1, y: player.y - 4, w: 3, h: 6, dx: -1.1, dy: -3.2 });
+        bullets.push({ x: player.x + player.w / 2 - 1, y: player.y - 4, w: 3, h: 6, dx: 1.1,  dy: -3.2 });
       } else if (doubleShot) {
-        bullets.push({ x: player.x + 3,               y: player.y - 4, w: 3, h: 6, dx: 0, dy: -3.4 });
-        bullets.push({ x: player.x + player.w - 6,    y: player.y - 4, w: 3, h: 6, dx: 0, dy: -3.4 });
+        bullets.push({ x: player.x + 4,               y: player.y - 4, w: 3, h: 6, dx: 0, dy: -3.6 });
+        bullets.push({ x: player.x + player.w - 7,    y: player.y - 4, w: 3, h: 6, dx: 0, dy: -3.6 });
       } else {
-        bullets.push({ x: player.x + player.w / 2 - 1,y: player.y - 4, w: 3, h: 6, dx: 0, dy: -3.4 });
+        bullets.push({ x: player.x + player.w / 2 - 1,y: player.y - 4, w: 3, h: 6, dx: 0, dy: -3.6 });
       }
 
       lastPlayerShotTime = now;
@@ -443,7 +450,7 @@
 
       const bottomEnemiesByCol = {};
       for (const e of enemies) {
-        const colKey = Math.round(e.x / 24);
+        const colKey = Math.round(e.x / 28);
         if (!bottomEnemiesByCol[colKey] || bottomEnemiesByCol[colKey].y < e.y) {
           bottomEnemiesByCol[colKey] = e;
         }
@@ -458,7 +465,7 @@
         w: 3,
         h: 6,
         dx: 0,
-        dy: 1.8 + level * 0.3,
+        dy: 1.9 + level * 0.3,
       });
 
       lastEnemyShotTime = now;
@@ -695,31 +702,31 @@
     // Capitol-Hintergrund
     function drawCapitolBackground() {
       drawPixelRect(0, 0, W, H, "#020816");
-      for (let i = 0; i < 35; i++) {
-        const sx = (i * 19) % W;
-        const sy = (i * 13) % 80;
+      for (let i = 0; i < 40; i++) {
+        const sx = (i * 23) % W;
+        const sy = (i * 17) % 100;
         drawPixelRect(sx, sy, 2, 2, "#cfd8dc", 0.55);
       }
 
-      const groundY = H - 36;
-      drawPixelRect(0, groundY, W, 36, "#081c0c");
+      const groundY = H - 40;
+      drawPixelRect(0, groundY, W, 40, "#081c0c");
 
       const centerX = W / 2;
 
-      drawPixelRect(centerX - 96, groundY - 20, 56, 16, "#e0e0e0");
-      drawPixelRect(centerX + 40, groundY - 20, 56, 16, "#e0e0e0");
+      drawPixelRect(centerX - 110, groundY - 24, 60, 18, "#e0e0e0");
+      drawPixelRect(centerX + 50,  groundY - 24, 60, 18, "#e0e0e0");
 
-      drawPixelRect(centerX - 60, groundY - 24, 120, 20, "#f5f5f5");
+      drawPixelRect(centerX - 70, groundY - 30, 140, 24, "#f5f5f5");
 
-      for (let i = -48; i <= 48; i += 16) {
-        drawPixelRect(centerX + i, groundY - 24, 6, 20, "#d0d0d0");
+      for (let i = -56; i <= 56; i += 16) {
+        drawPixelRect(centerX + i, groundY - 30, 6, 24, "#d0d0d0");
       }
 
-      drawPixelRect(centerX - 24, groundY - 44, 48, 12, "#e0e0e0");
-      drawPixelRect(centerX - 16, groundY - 48, 32, 4, "#f5f5f5");
-      drawPixelRect(centerX - 4, groundY - 54, 8, 6, "#fafafa");
-      drawPixelRect(centerX + 2, groundY - 60, 2, 6, "#b0bec5");
-      drawPixelRect(centerX + 4, groundY - 58, 6, 2, "#b71c1c");
+      drawPixelRect(centerX - 28, groundY - 52, 56, 14, "#e0e0e0");
+      drawPixelRect(centerX - 18, groundY - 58, 36, 6, "#f5f5f5");
+      drawPixelRect(centerX - 5,  groundY - 66, 10, 8, "#fafafa");
+      drawPixelRect(centerX + 2,  groundY - 74, 2, 8, "#b0bec5");
+      drawPixelRect(centerX + 4,  groundY - 72, 8, 3, "#b71c1c");
     }
 
     function drawPlayer() {
@@ -727,7 +734,7 @@
       const flashing = now < player.invincibleUntil && Math.floor(now / 100) % 2 === 0;
 
       if (now < upgrades.shieldUntil) {
-        drawPixelRect(player.x - 4, player.y - 4, player.w + 8, player.h + 8, "#80deea", 0.25);
+        drawPixelRect(player.x - 5, player.y - 5, player.w + 10, player.h + 10, "#80deea", 0.25);
       }
 
       if (flashing) return;
@@ -738,11 +745,11 @@
       if (img && img.complete) {
         ctx.drawImage(img, Math.round(player.x), Math.round(player.y), player.w, player.h);
       } else {
-        // Fallback-Sprite
-        drawPixelRect(player.x, player.y + 5, player.w, player.h - 5, "#b71c1c");
-        drawPixelRect(player.x + 5, player.y, 6, 5, "#f5d7b3");
-        drawPixelRect(player.x + player.w / 2 - 1, player.y + 7, 2, 5, "#ff5252");
-        drawPixelRect(player.x + 2, player.y + 5, player.w - 4, 3, "#d32f2f");
+        // Fallback-Sprite (größer)
+        drawPixelRect(player.x, player.y + 6, player.w, player.h - 6, "#b71c1c");
+        drawPixelRect(player.x + 6, player.y, 8, 6, "#f5d7b3");
+        drawPixelRect(player.x + player.w / 2 - 1, player.y + 8, 2, 6, "#ff5252");
+        drawPixelRect(player.x + 3, player.y + 6, player.w - 6, 3, "#d32f2f");
       }
     }
 
@@ -754,10 +761,10 @@
         } else {
           const bodyColor = "#1976d2";
           const faceColor = "#ffeb3b";
-          drawPixelRect(e.x, e.y + 5, e.w, e.h - 5, bodyColor);
-          drawPixelRect(e.x + 3, e.y, e.w - 6, 5, faceColor);
-          drawPixelRect(e.x + 4, e.y + 2, 2, 2, "#000");
-          drawPixelRect(e.x + e.w - 6, e.y + 2, 2, 2, "#000");
+          drawPixelRect(e.x, e.y + 6, e.w, e.h - 6, bodyColor);
+          drawPixelRect(e.x + 4, e.y, e.w - 8, 6, faceColor);
+          drawPixelRect(e.x + 5, e.y + 2, 2, 2, "#000");
+          drawPixelRect(e.x + e.w - 7, e.y + 2, 2, 2, "#000");
         }
       }
     }
@@ -798,30 +805,30 @@
 
     function drawHUD() {
       ctx.fillStyle = "#fff";
-      ctx.font = "12px monospace";
+      ctx.font = "13px monospace";
       ctx.textAlign = "left";
-      ctx.fillText("SCORE: " + score, 8, 16);
-      ctx.fillText("LEVEL: " + level, 8, 32);
+      ctx.fillText("SCORE: " + score, 8, 18);
+      ctx.fillText("LEVEL: " + level, 8, 36);
 
-      ctx.fillText("LIVES:", 120, 16);
+      ctx.fillText("LIVES:", 130, 18);
       for (let i = 0; i < player.lives; i++) {
-        drawPixelRect(180 + i * 10, 8, 8, 8, "#e53935");
+        drawPixelRect(190 + i * 10, 10, 8, 8, "#e53935");
       }
 
-      ctx.fillText("SIDE: RED", 8, 48);
+      ctx.fillText("SIDE: RED", 8, 52);
 
       ctx.textAlign = "right";
-      ctx.fillText("HI: " + highScore, W - 8, 16);
-      ctx.fillText(muted ? "MUTE" : "SOUND", W - 8, 32);
+      ctx.fillText("HI: " + highScore, W - 8, 18);
+      ctx.fillText(muted ? "MUTE" : "SOUND", W - 8, 36);
       ctx.textAlign = "left";
 
       const now = performance.now();
-      ctx.fillText("PWR:", 8, 64);
+      ctx.fillText("PWR:", 8, 70);
 
       let iconIndex = 0;
       function icon(active, color) {
         if (!active) return;
-        drawPixelRect(60 + iconIndex * 12, 56, 10, 10, color);
+        drawPixelRect(60 + iconIndex * 12, 62, 10, 10, color);
         iconIndex++;
       }
 
@@ -839,12 +846,12 @@
 
       ctx.save();
       ctx.fillStyle = "rgba(0, 0, 0, 0.75)";
-      ctx.fillRect(W / 2 - 110, H / 2 - 36, 220, 72);
+      ctx.fillRect(W / 2 - 120, H / 2 - 40, 240, 80);
 
       ctx.fillStyle = "#fff";
       ctx.textAlign = "center";
       ctx.font = "16px monospace";
-      ctx.fillText(p.title, W / 2, H / 2 - 8);
+      ctx.fillText(p.title, W / 2, H / 2 - 10);
 
       if (p.subtitle) {
         ctx.font = "11px monospace";
@@ -858,15 +865,15 @@
     function drawMenuBackground() {
       drawPixelRect(0, 0, W, H, "#000");
 
-      for (let i = 0; i < 7; i++) {
-        drawPixelRect(0, 20 + i * 20, W, 8, "#b71c1c", 0.5);
+      for (let i = 0; i < 8; i++) {
+        drawPixelRect(0, 26 + i * 26, W, 8, "#b71c1c", 0.5);
       }
 
-      drawPixelRect(10, 16, 90, 60, "#0d47a1", 0.7);
+      drawPixelRect(18, 20, 110, 70, "#0d47a1", 0.7);
       for (let r = 0; r < 6; r++) {
-        for (let c = 0; c < 8; c++) {
+        for (let c = 0; c < 10; c++) {
           if ((r + c) % 2 === 0) {
-            drawPixelRect(16 + c * 10, 20 + r * 10, 3, 3, "#fff", 0.9);
+            drawPixelRect(24 + c * 10, 26 + r * 10, 3, 3, "#fff", 0.9);
           }
         }
       }
@@ -878,19 +885,19 @@
 
       ctx.fillStyle = "#fff";
       ctx.textAlign = "center";
-      ctx.font = "20px monospace";
-      ctx.fillText("CAPITOL DEFENDER", W / 2, 70);
+      ctx.font = "22px monospace";
+      ctx.fillText("CAPITOL DEFENDER", W / 2, 90);
 
-      ctx.font = "12px monospace";
-      ctx.fillText("Du spielst den roten Reformer,", W / 2, 100);
-      ctx.fillText("der blaue Bürokratie-Blöcke stoppt.", W / 2, 118);
+      ctx.font = "13px monospace";
+      ctx.fillText("Du spielst den roten Reformer,", W / 2, 120);
+      ctx.fillText("der blaue Bürokratie-Blöcke stoppt.", W / 2, 140);
 
-      ctx.fillText("← / → : bewegen", W / 2, 148);
-      ctx.fillText("SPACE : schießen", W / 2, 164);
-      ctx.fillText("ENTER : Start", W / 2, 180);
-      ctx.fillText("M : Mute / Unmute", W / 2, 196);
+      ctx.fillText("← / → : bewegen", W / 2, 175);
+      ctx.fillText("SPACE : schießen", W / 2, 193);
+      ctx.fillText("ENTER : Start", W / 2, 211);
+      ctx.fillText("M : Mute / Unmute", W / 2, 229);
 
-      ctx.fillText("HIGH SCORE: " + highScore, W / 2, 222);
+      ctx.fillText("HIGH SCORE: " + highScore, W / 2, 260);
 
       ctx.textAlign = "left";
     }
@@ -910,17 +917,17 @@
 
     function drawGameOverScreen() {
       ctx.fillStyle = "rgba(0, 0, 0, 0.75)";
-      ctx.fillRect(W / 2 - 120, H / 2 - 40, 240, 80);
+      ctx.fillRect(W / 2 - 130, H / 2 - 45, 260, 90);
 
       ctx.fillStyle = "#fff";
       ctx.textAlign = "center";
       ctx.font = "20px monospace";
       ctx.fillText("GAME OVER", W / 2, H / 2 - 10);
 
-      ctx.font = "12px monospace";
+      ctx.font = "13px monospace";
       ctx.fillText("Score: " + score, W / 2, H / 2 + 10);
-      ctx.fillText("Highscore: " + highScore, W / 2, H / 2 + 26);
-      ctx.fillText("Press R or Enter", W / 2, H / 2 + 42);
+      ctx.fillText("Highscore: " + highScore, W / 2, H / 2 + 28);
+      ctx.fillText("Press R or Enter", W / 2, H / 2 + 46);
 
       ctx.textAlign = "left";
     }
