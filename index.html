@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>Capitol Defender – Ultimate</title>
+  <title>Capitol Defender – Ultimate HD</title>
   <style>
     * {
       box-sizing: border-box;
@@ -26,8 +26,8 @@
       image-rendering: crisp-edges;
       border: 3px solid #444;
       background: #000;
-      width: 480px;   /* 3x Skalierung */
-      height: 360px;  /* 3x Skalierung */
+      width: 640px;   /* 2x Skalierung */
+      height: 480px;  /* 2x Skalierung */
       display: block;
     }
 
@@ -44,7 +44,8 @@
   </style>
 </head>
 <body>
-  <canvas id="game" width="160" height="120"></canvas>
+  <!-- höhere Auflösung -->
+  <canvas id="game" width="320" height="240"></canvas>
 
   <div id="info">
     <strong>Controls:</strong> ← / → bewegen, <strong>Space</strong> schießen,
@@ -140,11 +141,11 @@
 
     // --- PLAYER (roter Reformer) ---
     const player = {
-      x: W / 2 - 5,
-      y: H - 16,
-      w: 10,
-      h: 10,
-      speed: 1.6,
+      x: W / 2 - 8,
+      y: H - 28,
+      w: 16,
+      h: 16,
+      speed: 2.2,
       lives: 3,
       invincibleUntil: 0,
     };
@@ -170,8 +171,8 @@
     const powerups = [];
     const popups = []; // Text-Popups
 
-    let enemyDx = 0.4;
-    let enemyStepDown = 4;
+    let enemyDx = 0.6;
+    let enemyStepDown = 8;
     let lastEnemyMoveTime = 0;
 
     let enemyShootInterval = 1200;
@@ -250,11 +251,11 @@
       enemies.length = 0;
 
       const enemyRows = 3 + Math.min(level - 1, 2); // 3–5 Reihen
-      const enemyCols = 7;
-      const enemySpacingX = 14;
-      const enemySpacingY = 12;
-      const enemyStartX = 10;
-      const enemyStartY = 12;
+      const enemyCols = 9;
+      const enemySpacingX = 24;
+      const enemySpacingY = 18;
+      const enemyStartX = 24;
+      const enemyStartY = 24;
 
       for (let row = 0; row < enemyRows; row++) {
         for (let col = 0; col < enemyCols; col++) {
@@ -263,15 +264,15 @@
           enemies.push({
             x,
             y,
-            w: 9,
-            h: 7,
+            w: 14,
+            h: 12,
             type: "blue",
           });
         }
       }
 
       // Difficulty scaling
-      enemyDx = 0.3 + level * 0.15;
+      enemyDx = 0.4 + level * 0.2;
       enemyShootInterval = Math.max(450, 1200 - (level - 1) * 120);
     }
 
@@ -292,11 +293,11 @@
       else type = "life";
 
       powerups.push({
-        x: x + 1,
+        x: x + 2,
         y: y,
-        w: 6,
-        h: 6,
-        dy: 0.6,
+        w: 10,
+        h: 10,
+        dy: 0.8,
         type,
       });
     }
@@ -321,7 +322,7 @@
         upgrades.scoreMultUntil = now + 10000;
         addPopup("Power-up: Score Boost", "Doppelter Score für Abschüsse.", 1800);
       } else if (type === "life") {
-        if (player.lives < 6) {
+        if (player.lives < 8) {
           player.lives++;
           addPopup("Extra Life", "Ein zusätzliches Leben.", 1800);
         } else {
@@ -334,15 +335,15 @@
 
     // --- EXPLOSIONS ---
     function spawnExplosion(x, y, color) {
-      for (let i = 0; i < 14; i++) {
+      for (let i = 0; i < 18; i++) {
         const angle = Math.random() * Math.PI * 2;
-        const speed = Math.random() * 1.4 + 0.3;
+        const speed = Math.random() * 2 + 0.5;
         particles.push({
           x,
           y,
           dx: Math.cos(angle) * speed,
           dy: Math.sin(angle) * speed,
-          life: 400,
+          life: 500,
           age: 0,
           color,
         });
@@ -370,53 +371,53 @@
         // Dreifach-Schuss mit leichter Streuung
         bullets.push({
           x: player.x + player.w / 2 - 1,
-          y: player.y - 3,
-          w: 2,
-          h: 4,
+          y: player.y - 4,
+          w: 3,
+          h: 6,
           dx: 0,
-          dy: -2.6,
+          dy: -3.4,
         });
         bullets.push({
           x: player.x + player.w / 2 - 1,
-          y: player.y - 3,
-          w: 2,
-          h: 4,
-          dx: -0.8,
-          dy: -2.4,
+          y: player.y - 4,
+          w: 3,
+          h: 6,
+          dx: -1.0,
+          dy: -3.0,
         });
         bullets.push({
           x: player.x + player.w / 2 - 1,
-          y: player.y - 3,
-          w: 2,
-          h: 4,
-          dx: 0.8,
-          dy: -2.4,
+          y: player.y - 4,
+          w: 3,
+          h: 6,
+          dx: 1.0,
+          dy: -3.0,
         });
       } else if (doubleShot) {
         bullets.push({
-          x: player.x + 2,
-          y: player.y - 3,
-          w: 2,
-          h: 4,
+          x: player.x + 3,
+          y: player.y - 4,
+          w: 3,
+          h: 6,
           dx: 0,
-          dy: -2.8,
+          dy: -3.4,
         });
         bullets.push({
-          x: player.x + player.w - 4,
-          y: player.y - 3,
-          w: 2,
-          h: 4,
+          x: player.x + player.w - 6,
+          y: player.y - 4,
+          w: 3,
+          h: 6,
           dx: 0,
-          dy: -2.8,
+          dy: -3.4,
         });
       } else {
         bullets.push({
           x: player.x + player.w / 2 - 1,
-          y: player.y - 3,
-          w: 2,
-          h: 4,
+          y: player.y - 4,
+          w: 3,
+          h: 6,
           dx: 0,
-          dy: -2.8,
+          dy: -3.4,
         });
       }
 
@@ -432,7 +433,7 @@
 
       const bottomEnemiesByCol = {};
       for (const e of enemies) {
-        const colKey = Math.round(e.x / 10);
+        const colKey = Math.round(e.x / 24);
         if (!bottomEnemiesByCol[colKey] || bottomEnemiesByCol[colKey].y < e.y) {
           bottomEnemiesByCol[colKey] = e;
         }
@@ -444,10 +445,10 @@
       enemyBullets.push({
         x: shooter.x + shooter.w / 2 - 1,
         y: shooter.y + shooter.h,
-        w: 2,
-        h: 4,
+        w: 3,
+        h: 6,
         dx: 0,
-        dy: 1.3 + level * 0.2,
+        dy: 1.8 + level * 0.3,
       });
 
       lastEnemyShotTime = now;
@@ -484,7 +485,6 @@
       enemyBullets.length = 0;
       particles.length = 0;
       powerups.length = 0;
-      // Upgrades resetten außer Shield? Wir machen alles zeitbasiert, also einfach weiterlaufen lassen.
       initEnemiesForLevel();
       lastEnemyMoveTime = 0;
       lastEnemyShotTime = 0;
@@ -508,7 +508,6 @@
 
     function update(dt) {
       if (state !== GAME_STATE.PLAYING) {
-        // Popups trotzdem altern lassen
         updatePopups(dt);
         return;
       }
@@ -522,15 +521,15 @@
       if (keys["ArrowRight"]) {
         player.x += player.speed;
       }
-      if (player.x < 2) player.x = 2;
-      if (player.x + player.w > W - 2) player.x = W - 2 - player.w;
+      if (player.x < 4) player.x = 4;
+      if (player.x + player.w > W - 4) player.x = W - 4 - player.w;
 
       // Player bullets
       for (let i = bullets.length - 1; i >= 0; i--) {
         const b = bullets[i];
         b.x += b.dx || 0;
         b.y += b.dy;
-        if (b.y + b.h < 0 || b.x < -10 || b.x > W + 10) {
+        if (b.y + b.h < 0 || b.x < -20 || b.x > W + 20) {
           bullets.splice(i, 1);
         }
       }
@@ -551,7 +550,7 @@
         let hitEdge = false;
         for (const e of enemies) {
           e.x += enemyDx;
-          if (e.x <= 2 || e.x + e.w >= W - 2) {
+          if (e.x <= 4 || e.x + e.w >= W - 4) {
             hitEdge = true;
           }
         }
@@ -602,7 +601,6 @@
           }
         }
         if (hit && i >= bullets.length) {
-          // Bullet wurde ggf. entfernt, also nichts mehr tun
           continue;
         }
       }
@@ -663,7 +661,7 @@
         p.x += p.dx;
         p.y += p.dy;
         p.age += dt;
-        p.dy += 0.01;
+        p.dy += 0.02;
         if (p.age > p.life) {
           particles.splice(i, 1);
         }
@@ -701,37 +699,37 @@
       // Himmel
       drawPixelRect(0, 0, W, H, "#020816");
       // Sterne
-      for (let i = 0; i < 20; i++) {
-        const sx = (i * 23) % W;
-        const sy = (i * 11) % 40;
-        drawPixelRect(sx, sy, 1, 1, "#cfd8dc", 0.5);
+      for (let i = 0; i < 35; i++) {
+        const sx = (i * 19) % W;
+        const sy = (i * 13) % 80;
+        drawPixelRect(sx, sy, 2, 2, "#cfd8dc", 0.55);
       }
 
       // Boden
-      const groundY = H - 18;
-      drawPixelRect(0, groundY, W, 18, "#081c0c");
+      const groundY = H - 36;
+      drawPixelRect(0, groundY, W, 36, "#081c0c");
 
       const centerX = W / 2;
 
       // Seitenflügel
-      drawPixelRect(centerX - 48, groundY - 10, 28, 8, "#e0e0e0");
-      drawPixelRect(centerX + 20, groundY - 10, 28, 8, "#e0e0e0");
+      drawPixelRect(centerX - 96, groundY - 20, 56, 16, "#e0e0e0");
+      drawPixelRect(centerX + 40, groundY - 20, 56, 16, "#e0e0e0");
 
       // Hauptgebäude
-      drawPixelRect(centerX - 30, groundY - 12, 60, 10, "#f5f5f5");
+      drawPixelRect(centerX - 60, groundY - 24, 120, 20, "#f5f5f5");
 
       // Säulen
-      for (let i = -24; i <= 24; i += 8) {
-        drawPixelRect(centerX + i, groundY - 12, 3, 10, "#d0d0d0");
+      for (let i = -48; i <= 48; i += 16) {
+        drawPixelRect(centerX + i, groundY - 24, 6, 20, "#d0d0d0");
       }
 
       // Kuppel
-      drawPixelRect(centerX - 12, groundY - 22, 24, 6, "#e0e0e0");
-      drawPixelRect(centerX - 8, groundY - 24, 16, 2, "#f5f5f5");
-      drawPixelRect(centerX - 2, groundY - 27, 4, 3, "#fafafa");
+      drawPixelRect(centerX - 24, groundY - 44, 48, 12, "#e0e0e0");
+      drawPixelRect(centerX - 16, groundY - 48, 32, 4, "#f5f5f5");
+      drawPixelRect(centerX - 4, groundY - 54, 8, 6, "#fafafa");
       // kleine Fahne
-      drawPixelRect(centerX + 1, groundY - 30, 1, 3, "#b0bec5");
-      drawPixelRect(centerX + 2, groundY - 29, 3, 1, "#b71c1c");
+      drawPixelRect(centerX + 2, groundY - 60, 2, 6, "#b0bec5");
+      drawPixelRect(centerX + 4, groundY - 58, 6, 2, "#b71c1c");
     }
 
     function drawPlayer() {
@@ -739,19 +737,19 @@
       const flashing = now < player.invincibleUntil && Math.floor(now / 100) % 2 === 0;
 
       if (now < upgrades.shieldUntil) {
-        drawPixelRect(player.x - 2, player.y - 2, player.w + 4, player.h + 4, "#80deea", 0.25);
+        drawPixelRect(player.x - 4, player.y - 4, player.w + 8, player.h + 8, "#80deea", 0.25);
       }
 
       if (flashing) return;
 
       // Körper in rot
-      drawPixelRect(player.x, player.y + 3, player.w, player.h - 3, "#b71c1c");
+      drawPixelRect(player.x, player.y + 5, player.w, player.h - 5, "#b71c1c");
       // Kopf
-      drawPixelRect(player.x + 3, player.y, 4, 3, "#f5d7b3");
+      drawPixelRect(player.x + 5, player.y, 6, 5, "#f5d7b3");
       // Krawatte
-      drawPixelRect(player.x + player.w / 2 - 1, player.y + 4, 2, 3, "#ff5252");
+      drawPixelRect(player.x + player.w / 2 - 1, player.y + 7, 2, 5, "#ff5252");
       // Schultern
-      drawPixelRect(player.x + 1, player.y + 3, player.w - 2, 2, "#d32f2f");
+      drawPixelRect(player.x + 2, player.y + 5, player.w - 4, 3, "#d32f2f");
     }
 
     function drawEnemies() {
@@ -759,12 +757,12 @@
         const bodyColor = "#1976d2";
         const faceColor = "#ffeb3b";
 
-        drawPixelRect(e.x, e.y + 3, e.w, e.h - 3, bodyColor);
-        drawPixelRect(e.x + 2, e.y, e.w - 4, 3, faceColor);
-        drawPixelRect(e.x + 3, e.y + 1, 1, 1, "#000");
-        drawPixelRect(e.x + e.w - 4, e.y + 1, 1, 1, "#000");
-        drawPixelRect(e.x - 1, e.y + 4, 2, 2, bodyColor);
-        drawPixelRect(e.x + e.w - 1, e.y + 4, 2, 2, bodyColor);
+        drawPixelRect(e.x, e.y + 5, e.w, e.h - 5, bodyColor);
+        drawPixelRect(e.x + 3, e.y, e.w - 6, 5, faceColor);
+        drawPixelRect(e.x + 4, e.y + 2, 2, 2, "#000");
+        drawPixelRect(e.x + e.w - 6, e.y + 2, 2, 2, "#000");
+        drawPixelRect(e.x - 2, e.y + 7, 4, 4, bodyColor);
+        drawPixelRect(e.x + e.w - 2, e.y + 7, 4, 4, bodyColor);
       }
     }
 
@@ -783,7 +781,7 @@
     function drawParticles() {
       for (const p of particles) {
         const alpha = 1 - p.age / p.life;
-        drawPixelRect(p.x, p.y, 2, 2, p.color, alpha);
+        drawPixelRect(p.x, p.y, 3, 3, p.color, alpha);
       }
     }
 
@@ -804,33 +802,33 @@
 
     function drawHUD() {
       ctx.fillStyle = "#fff";
-      ctx.font = "6px monospace";
+      ctx.font = "12px monospace";
       ctx.textAlign = "left";
-      ctx.fillText("SCORE: " + score, 4, 8);
-      ctx.fillText("LEVEL: " + level, 4, 16);
+      ctx.fillText("SCORE: " + score, 8, 16);
+      ctx.fillText("LEVEL: " + level, 8, 32);
 
       // Lives
-      ctx.fillText("LIVES:", 60, 8);
+      ctx.fillText("LIVES:", 120, 16);
       for (let i = 0; i < player.lives; i++) {
-        drawPixelRect(92 + i * 6, 3, 4, 4, "#e53935");
+        drawPixelRect(180 + i * 10, 8, 8, 8, "#e53935");
       }
 
       // Side & Highscore
-      ctx.fillText("SIDE: RED", 4, 24);
+      ctx.fillText("SIDE: RED", 8, 48);
 
       ctx.textAlign = "right";
-      ctx.fillText("HI: " + highScore, W - 4, 8);
-      ctx.fillText(muted ? "MUTE" : "SOUND", W - 4, 16);
+      ctx.fillText("HI: " + highScore, W - 8, 16);
+      ctx.fillText(muted ? "MUTE" : "SOUND", W - 8, 32);
       ctx.textAlign = "left";
 
       // Powerup-Status
       const now = performance.now();
-      ctx.fillText("PWR:", 4, 32);
+      ctx.fillText("PWR:", 8, 64);
 
       let iconIndex = 0;
       function icon(active, color) {
         if (!active) return;
-        drawPixelRect(24 + iconIndex * 6, 28, 4, 4, color);
+        drawPixelRect(60 + iconIndex * 12, 56, 10, 10, color);
         iconIndex++;
       }
 
@@ -847,17 +845,17 @@
       const p = popups[0];
 
       ctx.save();
-      ctx.fillStyle = "rgba(0, 0, 0, 0.7)";
-      ctx.fillRect(W / 2 - 55, H / 2 - 20, 110, 40);
+      ctx.fillStyle = "rgba(0, 0, 0, 0.75)";
+      ctx.fillRect(W / 2 - 110, H / 2 - 36, 220, 72);
 
       ctx.fillStyle = "#fff";
       ctx.textAlign = "center";
-      ctx.font = "7px monospace";
-      ctx.fillText(p.title, W / 2, H / 2 - 4);
+      ctx.font = "16px monospace";
+      ctx.fillText(p.title, W / 2, H / 2 - 8);
 
       if (p.subtitle) {
-        ctx.font = "5px monospace";
-        ctx.fillText(p.subtitle, W / 2, H / 2 + 6);
+        ctx.font = "11px monospace";
+        ctx.fillText(p.subtitle, W / 2, H / 2 + 12);
       }
 
       ctx.textAlign = "left";
@@ -868,15 +866,15 @@
     function drawMenuBackground() {
       drawPixelRect(0, 0, W, H, "#000");
 
-      for (let i = 0; i < 5; i++) {
-        drawPixelRect(0, 10 + i * 10, W, 4, "#b71c1c", 0.5);
+      for (let i = 0; i < 7; i++) {
+        drawPixelRect(0, 20 + i * 20, W, 8, "#b71c1c", 0.5);
       }
 
-      drawPixelRect(5, 8, 45, 30, "#0d47a1", 0.7);
-      for (let r = 0; r < 4; r++) {
-        for (let c = 0; c < 6; c++) {
+      drawPixelRect(10, 16, 90, 60, "#0d47a1", 0.7);
+      for (let r = 0; r < 6; r++) {
+        for (let c = 0; c < 8; c++) {
           if ((r + c) % 2 === 0) {
-            drawPixelRect(8 + c * 6, 10 + r * 6, 2, 2, "#fff", 0.9);
+            drawPixelRect(16 + c * 10, 20 + r * 10, 3, 3, "#fff", 0.9);
           }
         }
       }
@@ -888,19 +886,20 @@
 
       ctx.fillStyle = "#fff";
       ctx.textAlign = "center";
-      ctx.font = "11px monospace";
-      ctx.fillText("CAPITOL DEFENDER", W / 2, 40);
+      ctx.font = "20px monospace";
+      ctx.fillText("CAPITOL DEFENDER", W / 2, 70);
 
-      ctx.font = "6px monospace";
-      ctx.fillText("Du spielst den roten Reformer,", W / 2, 55);
-      ctx.fillText("der blaue Bürokratie-Blöcke stoppt.", W / 2, 63);
+      ctx.font = "12px monospace";
+      ctx.fillText("Du spielst den roten Reformer,", W / 2, 100);
+      ctx.fillText("der blaue Bürokratie-Blöcke stoppt.", W / 2, 118);
 
-      ctx.fillText("← / → : bewegen", W / 2, 82);
-      ctx.fillText("SPACE : schießen", W / 2, 90);
-      ctx.fillText("ENTER : Start", W / 2, 98);
-      ctx.fillText("M : Mute / Unmute", W / 2, 106);
+      ctx.font = "12px monospace";
+      ctx.fillText("← / → : bewegen", W / 2, 148);
+      ctx.fillText("SPACE : schießen", W / 2, 164);
+      ctx.fillText("ENTER : Start", W / 2, 180);
+      ctx.fillText("M : Mute / Unmute", W / 2, 196);
 
-      ctx.fillText("HIGH SCORE: " + highScore, W / 2, 122);
+      ctx.fillText("HIGH SCORE: " + highScore, W / 2, 222);
 
       ctx.textAlign = "left";
     }
@@ -919,18 +918,18 @@
     }
 
     function drawGameOverScreen() {
-      ctx.fillStyle = "rgba(0, 0, 0, 0.7)";
-      ctx.fillRect(0, 0, W, H);
+      ctx.fillStyle = "rgba(0, 0, 0, 0.75)";
+      ctx.fillRect(W / 2 - 120, H / 2 - 40, 240, 80);
 
       ctx.fillStyle = "#fff";
       ctx.textAlign = "center";
-      ctx.font = "10px monospace";
+      ctx.font = "20px monospace";
       ctx.fillText("GAME OVER", W / 2, H / 2 - 10);
 
-      ctx.font = "6px monospace";
-      ctx.fillText("Score: " + score, W / 2, H / 2);
-      ctx.fillText("Highscore: " + highScore, W / 2, H / 2 + 8);
-      ctx.fillText("Press R or Enter", W / 2, H / 2 + 18);
+      ctx.font = "12px monospace";
+      ctx.fillText("Score: " + score, W / 2, H / 2 + 10);
+      ctx.fillText("Highscore: " + highScore, W / 2, H / 2 + 26);
+      ctx.fillText("Press R or Enter", W / 2, H / 2 + 42);
 
       ctx.textAlign = "left";
     }
