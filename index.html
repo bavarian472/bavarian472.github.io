@@ -77,7 +77,7 @@
 
     // --- IMAGES ---
 
-    // Player images (new names)
+    // Player images
     const playerImgNormal = new Image();
     playerImgNormal.src = "player_normal.png";
 
@@ -94,9 +94,9 @@
 
     // --- AUDIO ---
 
-    let audioCtx = null;          // für SFX
+    let audioCtx = null;          // SFX
     let muted = false;
-    let bgMusic = null;           // für deine music.mp3
+    let bgMusic = null;           // music.mp3
 
     function initSfxAudio() {
       try {
@@ -161,7 +161,7 @@
         osc.start(now);
         osc.stop(now + duration);
       } catch (e) {
-        // SFX kaputt? Dann halt leise, aber Spiel läuft weiter
+        // SFX Fehler ignorieren
       }
     }
 
@@ -177,7 +177,7 @@
           bgMusic.play().catch(() => {});
         }
       } catch (e) {
-        // Wenn music.mp3 fehlt oder nicht spielbar ist → einfach ohne Musik
+        // Kein music.mp3 oder Browser blockt → einfach still
       }
     }
 
@@ -467,7 +467,7 @@
       lastTime = 0;
       state = GAME_STATE.PLAYING;
       showLevelPopup();
-      startBackgroundMusic(); // startet dein music.mp3
+      startBackgroundMusic();
     }
 
     function startNextLevel() {
@@ -495,7 +495,7 @@
     }
 
     // --- UPDATE ---
-    let lastTime = 0;
+    let lastTime = 0;   // nur HIER deklariert
 
     function update(dt) {
       if (state !== GAME_STATE.PLAYING) {
@@ -718,7 +718,6 @@
       if (img && img.complete) {
         ctx.drawImage(img, Math.round(player.x), Math.round(player.y), player.w, player.h);
       } else {
-        // Fallback Sprite
         drawPixelRect(player.x, player.y + 5, player.w, player.h - 5, "#b71c1c");
         drawPixelRect(player.x + 5, player.y, 6, 5, "#f5d7b3");
         drawPixelRect(player.x + player.w / 2 - 1, player.y + 7, 2, 5, "#ff5252");
@@ -732,7 +731,6 @@
         if (img && img.complete) {
           ctx.drawImage(img, Math.round(e.x), Math.round(e.y), e.w, e.h);
         } else {
-          // Fallback: alte Pixel-Gegner
           const bodyColor = "#1976d2";
           const faceColor = "#ffeb3b";
           drawPixelRect(e.x, e.y + 5, e.w, e.h - 5, bodyColor);
@@ -928,7 +926,6 @@
     }
 
     // Start
-    let lastTime = 0;
     initEnemiesForLevel();
     requestAnimationFrame(loop);
   </script>
