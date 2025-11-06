@@ -21,6 +21,13 @@
       height: 100vh;
     }
 
+    /* Wrapper so we can place the GIF exactly over the canvas */
+    #game-wrapper {
+      position: relative;
+      width: 1024px;
+      height: 724px;
+    }
+
     canvas {
       image-rendering: pixelated;
       image-rendering: crisp-edges;
@@ -29,7 +36,17 @@
       width: 1024px;
       height: 724px;
       display: block;
-      cursor: pointer; /* so menu feels clickable */
+      cursor: pointer;
+    }
+
+    /* Animated flag overlay – this is the GIF that moves */
+    #flagGif {
+      position: absolute;
+      width: 42px;          /* „Größe“ der Flagge */
+      left: 50%;            /* horizontal mittig */
+      transform: translateX(-50%);
+      top: 276px;           /* vertikale Position – bei Bedarf feintunen */
+      pointer-events: none; /* nicht anklickbar, damit Canvas-Eingaben normal bleiben */
     }
 
     #info {
@@ -45,7 +62,11 @@
   </style>
 </head>
 <body>
-  <canvas id="game" width="1024" height="724"></canvas>
+  <div id="game-wrapper">
+    <canvas id="game" width="1024" height="724"></canvas>
+    <!-- animated GIF on top of the canvas -->
+    <img id="flagGif" src="flag.gif" alt="US Flag">
+  </div>
 
   <div id="info">
     <strong>Controls:</strong> ← / → move, <strong>Space</strong> shoot,
@@ -96,10 +117,6 @@
 
     const logoImg = new Image();
     logoImg.src = "logo.png";
-
-    // 🇺🇸 animated flag image
-    const flagImg = new Image();
-    flagImg.src = "flag.gif";
 
     // --- AUDIO ---
 
@@ -721,19 +738,8 @@
       }
     }
 
-    // 🇺🇸 draw animated flag on top of the Capitol
-    function drawFlagOverlay() {
-      if (!flagImg.complete || flagImg.naturalWidth === 0) return;
-
-      const targetWidth = 42;
-      const aspect = flagImg.naturalHeight / flagImg.naturalWidth;
-      const targetHeight = targetWidth * aspect;
-
-      const x = W / 2 - targetWidth / 2;
-      const y = 276; // tweak slightly if it looks off
-
-      ctx.drawImage(flagImg, x, y, targetWidth, targetHeight);
-    }
+    // old flag function now no-op (visual flag is handled by #flagGif)
+    function drawFlagOverlay() {}
 
     function drawPixelRect(x, y, w, h, color, alpha = 1) {
       ctx.save();
@@ -868,7 +874,7 @@
     // --- MENU WITH LOGO ---
     function drawMenu() {
       drawBackground();
-      drawFlagOverlay(); // << Flagge im Menü
+      drawFlagOverlay(); // now no-op, visual flag is HTML overlay
 
       // get logo's natural size and scale proportionally
       let logoW = 480;
@@ -909,7 +915,7 @@
 
     function drawGame() {
       drawBackground();
-      drawFlagOverlay(); // << Flagge auch im Spiel
+      drawFlagOverlay(); // still no-op
       drawEnemies();
       drawEnemyBullets();
       drawBullets();
