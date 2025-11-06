@@ -166,20 +166,19 @@
     }
 
     function startBackgroundMusic() {
-      try {
-        if (!bgMusic) {
-          bgMusic = new Audio("music.mp3");
-          bgMusic.loop = true;
-          bgMusic.volume = 0.4;
-        }
-        if (!muted && bgMusic.paused) {
-          bgMusic.currentTime = 0;
-          bgMusic.play().catch(() => {});
-        }
-      } catch (e) {
-        // Kein music.mp3 oder Browser blockt → einfach still
-      }
+  try {
+    if (!bgMusic) {
+      bgMusic = new Audio("music.mp3");
+      bgMusic.loop = true;
+      bgMusic.volume = 0.4;
     }
+    bgMusic.play().catch(() => {
+      console.warn("Music autoplay blocked – will start after interaction");
+    });
+  } catch (e) {
+    console.error(e);
+  }
+}
 
     function updateMusicMuteState() {
       if (!bgMusic) return;
