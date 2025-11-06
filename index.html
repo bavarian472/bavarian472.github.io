@@ -23,31 +23,34 @@
 
     /* Wrapper so we can place the GIF exactly over the canvas */
     #game-wrapper {
-      position: relative;
-      width: 1024px;
-      height: 724px;
-    }
+  position: relative;
+  width: 1024px;
+  height: 724px;
+}
 
-    canvas {
-      image-rendering: pixelated;
-      image-rendering: crisp-edges;
-      border: 3px solid #444;
-      background: #000;
-      width: 1024px;
-      height: 724px;
-      display: block;
-      cursor: pointer;
-    }
+   canvas {
+  position: relative;
+  z-index: 1;            /* sits above the flag */
+  image-rendering: pixelated;
+  image-rendering: crisp-edges;
+  border: 3px solid #444;
+  background: #000;
+  width: 1024px;
+  height: 724px;
+  display: block;
+  cursor: pointer;
+}
 
     /* Animated flag overlay – this is the GIF that moves */
     #flagGif {
-      position: absolute;
-      width: 42px;          /* „Größe“ der Flagge */
-      left: 50%;            /* horizontal mittig */
-      transform: translateX(-50%);
-      top: 276px;           /* vertikale Position – bei Bedarf feintunen */
-      pointer-events: none; /* nicht anklickbar, damit Canvas-Eingaben normal bleiben */
-    }
+  position: absolute;
+  width: 42px;
+  left: 50%;
+  transform: translateX(-50%);
+  top: 246px;
+  z-index: 0;            /* sits behind canvas */
+  pointer-events: none;
+}
 
     #info {
       margin-top: 10px;
