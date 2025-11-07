@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>Capitol Defender+</title>
+  <title>Capitol Defender</title>
   <style>
     * {
       box-sizing: border-box;
@@ -89,7 +89,16 @@
 
   <script>
     const canvas = document.getElementById("game");
-    const ctx = canvas.getContext("2d");
+const ctx = canvas.getContext("2d");
+
+// scale canvas for devicePixelRatio
+const dpr = window.devicePixelRatio || 1;
+canvas.width = 1024 * dpr;
+canvas.height = 724 * dpr;
+canvas.style.width = "1024px";
+canvas.style.height = "724px";
+ctx.scale(dpr, dpr);
+
 
     const W = canvas.width;
     const H = canvas.height;
