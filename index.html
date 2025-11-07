@@ -114,7 +114,7 @@
       highScore = 0;
     }
 
-    // Ticker messages for HUD
+    // Ticker messages
     const tickerMessages = [
       "NEWS: Paperwork wave approaching the Capitol...",
       "REPORT: Red reformer holds the line against bureaucracy.",
@@ -323,7 +323,7 @@
     let comboCount = 0;
     let comboTimer = 0;
 
-    // Weapon heat (purely visual)
+    // Weapon heat (visual only)
     let weaponHeat = 0; // 0..1
 
     const keys = {};
@@ -406,7 +406,7 @@
       const enemySpacingX = 90;
       const enemySpacingY = 70;
       const enemyStartX = 70;
-      const enemyStartY = 120; // a bit lower so HUD + PWR bar have room
+      const enemyStartY = 120; // lower so HUD/PWR have room
 
       for (let row = 0; row < enemyRows; row++) {
         for (let col = 0; col < enemyCols; col++) {
@@ -598,7 +598,6 @@
         bullets.push({ x: baseX, y: startY, w: bulletWidth, h: bulletHeight, dx: 0, dy: -6 });
       }
 
-      // Bump weapon heat purely for visuals
       weaponHeat = Math.min(1, weaponHeat + (spreadShot ? 0.25 : doubleShot ? 0.2 : 0.15));
 
       lastPlayerShotTime = now;
@@ -707,7 +706,6 @@
 
       const now = performance.now();
 
-      // Combo decay
       if (comboTimer > 0) {
         comboTimer -= dt;
         if (comboTimer <= 0) {
@@ -716,7 +714,6 @@
         }
       }
 
-      // Weapon heat decay (visual only)
       if (weaponHeat > 0) {
         weaponHeat -= dt * 0.0003;
         if (weaponHeat < 0) weaponHeat = 0;
@@ -948,7 +945,6 @@
       ctx.restore();
     }
 
-    // HUD panel helper
     function drawPanel(x, y, w, h, alpha = 0.6) {
       ctx.save();
       ctx.fillStyle = `rgba(0,0,0,${alpha})`;
@@ -1022,12 +1018,10 @@
       }
     }
 
-    // --- HUD ---
-
     function drawHUD() {
       const now = performance.now();
 
-      // Top HUD bar & faint scanline
+      // Top bar
       drawPixelRect(0, 0, W, HUD_BAR_HEIGHT, "#000", 0.55);
       drawPixelRect(0, HUD_BAR_HEIGHT, W, 2, "#ffffff", 0.1);
 
@@ -1047,12 +1041,10 @@
       ctx.fillStyle = "#ffeb3b";
       ctx.fillText(String(score).padStart(4, " "), scorePanelX + 10, scorePanelY + 34);
 
-      // Combo
       const comboText = "COMBO x" + (comboCount > 0 ? comboCount : 1);
       ctx.fillStyle = comboCount > 1 ? "#ff8a65" : "#555";
       ctx.fillText(comboText, scorePanelX + 110, scorePanelY + 34);
 
-      // Weapon heat bar
       const heatX = scorePanelX + 10;
       const heatY = scorePanelY + 36;
       const heatW = scorePanelW - 20;
@@ -1097,14 +1089,13 @@
       }
       ctx.restore();
 
-      // LEVEL panel + threat + wave progress + tiny portraits
+      // LEVEL panel + threat + wave progress
       const levelPanelX = 510;
       const levelPanelY = 10;
       const levelPanelW = 200;
       const levelPanelH = 44;
       drawPanel(levelPanelX, levelPanelY, levelPanelW, levelPanelH, 0.7);
 
-      // Threat indicator based on diving enemies
       let divingCount = 0;
       let maxDiveY = 0;
       for (const e of enemies) {
@@ -1130,7 +1121,6 @@
       ctx.fillStyle = "#ffffff";
       ctx.fillText(String(level), levelPanelX + levelPanelW / 2, levelPanelY + 34);
 
-      // Threat text (top-right inside panel)
       ctx.textAlign = "right";
       ctx.fillStyle = threatColor;
       ctx.font = "12px monospace";
@@ -1138,7 +1128,6 @@
       ctx.font = "16px monospace";
       ctx.restore();
 
-      // Wave progress bar (bottom inside level panel)
       const barX = levelPanelX + 15;
       const barY = levelPanelY + 34;
       const barW = levelPanelW - 30;
@@ -1152,20 +1141,6 @@
           progress < 0.33 ? "#8bc34a" :
           progress < 0.66 ? "#ffc107" : "#ef5350";
         drawPixelRect(barX + 1, barY + 1, (barW - 2) * progress, barH - 2, progColor, 1);
-      }
-
-      // Tiny enemy portraits in the level panel (top-left)
-      const portraitY = levelPanelY + 28;
-      let portraitX = levelPanelX + 8;
-      const portraitSize = 14;
-      for (let i = 0; i < enemyImages.length; i++) {
-        const img = enemyImages[i];
-        if (img.complete && img.naturalWidth > 0) {
-          ctx.drawImage(img, portraitX, portraitY - portraitSize, portraitSize, portraitSize);
-        } else {
-          drawPixelRect(portraitX, portraitY - portraitSize, portraitSize, portraitSize, "#1976d2");
-        }
-        portraitX += portraitSize + 2;
       }
 
       // HI / SOUND panel
@@ -1228,7 +1203,7 @@
       ctx.font = "16px monospace";
       ctx.restore();
 
-      // Ticker text along bottom of HUD bar
+      // Ticker text
       if (tickerMessages.length) {
         ctx.save();
         ctx.textAlign = "center";
