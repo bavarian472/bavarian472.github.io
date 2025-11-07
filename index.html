@@ -89,19 +89,19 @@
 
   <script>
     const canvas = document.getElementById("game");
-const ctx = canvas.getContext("2d");
+    const ctx = canvas.getContext("2d");
 
-// scale canvas for devicePixelRatio
-const dpr = window.devicePixelRatio || 1;
-canvas.width = 1024 * dpr;
-canvas.height = 724 * dpr;
-canvas.style.width = "1024px";
-canvas.style.height = "724px";
-ctx.scale(dpr, dpr);
+    // Logical game resolution (what the code uses)
+    const W = 1024;
+    const H = 724;
 
-
-    const W = canvas.width;
-    const H = canvas.height;
+    // Scale canvas for device pixel ratio so it looks the same on all screens
+    const dpr = window.devicePixelRatio || 1;
+    canvas.width = W * dpr;
+    canvas.height = H * dpr;
+    canvas.style.width = W + "px";
+    canvas.style.height = H + "px";
+    ctx.scale(dpr, dpr);
 
     const GAME_STATE = {
       MENU: "menu",
@@ -450,43 +450,42 @@ ctx.scale(dpr, dpr);
       return [ox, oy];
     }
 
-    // start a dive for one random enemy
+    // start a dive for one random enemy (25% slower than original)
     function tryStartDive(now) {
-  if (level < 2) return; // keep level 1 simple
+      if (level < 2) return; // keep level 1 simple
 
-  const interval = Math.max(1200, 3200 - level * 250); // faster on higher levels
-  if (now - lastDiveTime < interval) return;
+      const interval = Math.max(1200, 3200 - level * 250); // faster on higher levels
+      if (now - lastDiveTime < interval) return;
 
-  const candidates = enemies.filter(e => !e.isDiving);
-  if (!candidates.length) return;
+      const candidates = enemies.filter(e => !e.isDiving);
+      if (!candidates.length) return;
 
-  const e = candidates[Math.floor(Math.random() * candidates.length)];
-  e.isDiving = true;
+      const e = candidates[Math.floor(Math.random() * candidates.length)];
+      e.isDiving = true;
 
-  // aim directly toward player's current position
-  const targetX = player.x + player.w / 2;
-  const targetY = player.y + player.h / 2;
+      // aim directly toward player's current position
+      const targetX = player.x + player.w / 2;
+      const targetY = player.y + player.h / 2;
 
-  const dx = targetX - e.x;
-  const dy = targetY - e.y;
+      const dx = targetX - e.x;
+      const dy = targetY - e.y;
 
-  const steps = 60; // frames-ish to reach player
-  let vx = dx / steps;
-  let vy = dy / steps;
+      const steps = 60; // frames-ish to reach player
+      let vx = dx / steps;
+      let vy = dy / steps;
 
-  // make divers ~25% slower
-  vx *= 0.60;
-  vy *= 0.60;
+      // make divers ~25% slower
+      vx *= 0.75;
+      vy *= 0.75;
 
-  e.vx = vx;
-  e.vy = vy;
+      e.vx = vx;
+      e.vy = vy;
 
-  // also reduce "gravity" by 25%
-  e.diveSpeedY = (0.10 + Math.random() * 0.05) * 0.75;
+      // also reduce "gravity" by ~25%
+      e.diveSpeedY = (0.10 + Math.random() * 0.05) * 0.75;
 
-  lastDiveTime = now;
-}
-
+      lastDiveTime = now;
+    }
 
     // --- POWERUPS ---
     function spawnPowerup(x, y) {
@@ -590,8 +589,8 @@ ctx.scale(dpr, dpr);
         bullets.push({ x: baseX, y: startY, w: bulletWidth, h: bulletHeight, dx: -1.8, dy: -5.3 });
         bullets.push({ x: baseX, y: startY, w: bulletWidth, h: bulletHeight, dx: 1.8,  dy: -5.3 });
       } else if (doubleShot) {
-        bullets.push({ x: player.x + 8,                 y: startY, w: bulletWidth, h: bulletHeight, dx: 0, dy: -6 });
-        bullets.push({ x: player.x + player.w - 12,     y: startY, w: bulletWidth, h: bulletHeight, dx: 0, dy: -6 });
+        bullets.push({ x: player.x + 8,             y: startY, w: bulletWidth, h: bulletHeight, dx: 0, dy: -6 });
+        bullets.push({ x: player.x + player.w - 12, y: startY, w: bulletWidth, h: bulletHeight, dx: 0, dy: -6 });
       } else {
         bullets.push({ x: baseX, y: startY, w: bulletWidth, h: bulletHeight, dx: 0, dy: -6 });
       }
@@ -731,9 +730,7 @@ ctx.scale(dpr, dpr);
           if (ex + e.w > maxX) maxX = ex + e.w;
         }
 
-        if (minX === Infinity) {
-          // all enemies diving or dead, nothing to clamp
-        } else if (minX <= 16 || maxX >= W - 16) {
+        if (minX !== Infinity && (minX <= 16 || maxX >= W - 16)) {
           formationDir *= -1;
           formationOffsetX += enemyDx * formationDir; // small nudge back inside
           formationOffsetY += enemyStepDown;
