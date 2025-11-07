@@ -59,6 +59,60 @@
       cursor: pointer;
     }
 
+    /* Hannity TV overlay */
+    #news-tv {
+      position: absolute;
+      bottom: 40px;
+      left: -380px;          /* off-screen start */
+      width: 360px;
+      height: 160px;
+      background: #111;
+      border: 4px solid #555;
+      border-radius: 10px;
+      overflow: hidden;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      opacity: 0;
+      transition: all 0.8s ease-in-out;
+      box-shadow: 0 0 18px rgba(0, 0, 0, 0.8);
+      z-index: 3;            /* above canvas */
+    }
+
+    #news-tv.show {
+      left: 30px;            /* slide in */
+      opacity: 1;
+    }
+
+    #tv-host {
+      width: 130px;
+      height: 100%;
+      object-fit: cover;
+      filter: contrast(1.1) brightness(1.05);
+    }
+
+    #tv-text {
+      flex: 1;
+      font-size: 14px;
+      color: #f8f8f8;
+      padding: 10px 12px;
+      font-family: monospace;
+      text-shadow: 1px 1px #000;
+      line-height: 1.3;
+    }
+
+    #tv-text span.tag {
+      display: inline-block;
+      padding: 1px 5px;
+      margin-bottom: 4px;
+      background: #c62828;
+      color: #fff;
+      font-size: 11px;
+      border-radius: 3px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+
     #info {
       margin-top: 10px;
       font-size: 14px;
@@ -76,6 +130,15 @@
     <img id="bgImage" src="background.png" alt="Background">
     <img id="flagGif" src="flag.gif" alt="US Flag">
     <canvas id="game" width="1024" height="724"></canvas>
+
+    <!-- Hannity TV overlay -->
+    <div id="news-tv">
+      <img src="hannity.png" id="tv-host" alt="Sean Hannity">
+      <div id="tv-text">
+        <span class="tag">FOX NEWS</span><br>
+        Sean Hannity: …
+      </div>
+    </div>
   </div>
 
   <div id="info">
@@ -157,6 +220,10 @@
     const heartImg = new Image();
     heartImg.src = "hearts.png";
 
+    // Hannity TV elements
+    const newsTv = document.getElementById("news-tv");
+    const tvText = document.getElementById("tv-text");
+
     // AUDIO
     const MUSIC_URL =
       "https://github.com/bavarian472/bavarian472.github.io/blob/main/music.mp3?raw=true";
@@ -165,6 +232,8 @@
     let muted = false;
     let bgMusic = null;
     let musicBlocked = false;
+
+    const hannityAudio = new Audio("hannity.mp3");
 
     function initSfxAudio() {
       try {
@@ -396,6 +465,33 @@
       addPopup(msg.title, msg.subtitle, 2600);
     }
 
+    // Hannity TV logic
+    function showHannityNews(completedLevel) {
+      if (completedLevel <= 0) return;
+      const lines = [
+        "Sean Hannity: The Capitol has been secured once again by our brave defender.",
+        "Sean Hannity: Blue forces retreat as paperwork piles vanish.",
+        "Sean Hannity: Bureaucracy beaten back by American strength.",
+        "Sean Hannity: Another wave of nonsense defeated, folks.",
+        "Sean Hannity: Incredible stand at the Capitol. On to the next one."
+      ];
+      const idx = (completedLevel - 1) % lines.length;
+      tvText.innerHTML =
+        '<span class="tag">FOX NEWS</span><br>' +
+        lines[idx];
+
+      newsTv.classList.add("show");
+
+      if (!muted) {
+        hannityAudio.currentTime = 0;
+        hannityAudio.play().catch(() => {});
+      }
+
+      setTimeout(() => {
+        newsTv.classList.remove("show");
+      }, 6000);
+    }
+
     function initEnemiesForLevel() {
       enemies.length = 0;
 
@@ -406,7 +502,7 @@
       const enemySpacingX = 90;
       const enemySpacingY = 70;
       const enemyStartX = 70;
-      const enemyStartY = 120; // lower so HUD/PWR have room
+      const enemyStartY = 120;
 
       for (let row = 0; row < enemyRows; row++) {
         for (let col = 0; col < enemyCols; col++) {
@@ -661,6 +757,8 @@
     }
 
     function startNextLevel() {
+      const completedLevel = level; // level just cleared
+
       level++;
       bullets.length = 0;
       enemyBullets.length = 0;
@@ -673,6 +771,7 @@
       lastEnemyMoveTime = 0;
       lastEnemyShotTime = 0;
       showLevelPopup();
+      showHannityNews(completedLevel);
     }
 
     function gameOver() {
@@ -1021,13 +1120,12 @@
     function drawHUD() {
       const now = performance.now();
 
-      // Top bar
       drawPixelRect(0, 0, W, HUD_BAR_HEIGHT, "#000", 0.55);
       drawPixelRect(0, HUD_BAR_HEIGHT, W, 2, "#ffffff", 0.1);
 
       ctx.font = "16px monospace";
 
-      // SCORE panel
+      // SCORE
       const scorePanelX = 10;
       const scorePanelY = 10;
       const scorePanelW = 200;
@@ -1065,7 +1163,7 @@
       }
       ctx.restore();
 
-      // LIVES panel
+      // LIVES
       const livesPanelX = 230;
       const livesPanelY = 10;
       const livesPanelW = 260;
@@ -1089,7 +1187,7 @@
       }
       ctx.restore();
 
-      // LEVEL panel + threat + wave progress
+      // LEVEL + threat + progress
       const levelPanelX = 510;
       const levelPanelY = 10;
       const levelPanelW = 200;
@@ -1143,7 +1241,7 @@
         drawPixelRect(barX + 1, barY + 1, (barW - 2) * progress, barH - 2, progColor, 1);
       }
 
-      // HI / SOUND panel
+      // HI / SOUND
       const hiPanelW = 200;
       const hiPanelX = W - hiPanelW - 10;
       const hiPanelY = 10;
@@ -1158,7 +1256,7 @@
       ctx.fillText(muted ? "MUTED" : "SOUND", hiPanelX + hiPanelW - 10, hiPanelY + 34);
       ctx.restore();
 
-      // PWR panel with legend
+      // PWR
       const pwrPanelX = 10;
       const pwrPanelY = HUD_BAR_HEIGHT + 4;
       const pwrPanelW = 320;
@@ -1203,7 +1301,7 @@
       ctx.font = "16px monospace";
       ctx.restore();
 
-      // Ticker text
+      // Ticker
       if (tickerMessages.length) {
         ctx.save();
         ctx.textAlign = "center";
