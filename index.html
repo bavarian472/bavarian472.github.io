@@ -234,6 +234,8 @@
     let musicBlocked = false;
 
     const hannityAudio = new Audio("hannity.mp3");
+    hannityAudio.volume = 1.0; // max volume (0.0–1.0 range)
+
 
     function initSfxAudio() {
       try {
