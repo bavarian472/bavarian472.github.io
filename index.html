@@ -4,11 +4,7 @@
   <meta charset="UTF-8" />
   <title>Capitol Defender</title>
   <style>
-    * {
-      box-sizing: border-box;
-      margin: 0;
-      padding: 0;
-    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
 
     body {
       background: #050608;
@@ -63,7 +59,7 @@
     #news-tv {
       position: absolute;
       bottom: 40px;
-      left: -380px;          /* off-screen start */
+      left: -380px;
       width: 360px;
       height: 160px;
       background: #111;
@@ -76,11 +72,11 @@
       opacity: 0;
       transition: all 0.8s ease-in-out;
       box-shadow: 0 0 18px rgba(0, 0, 0, 0.8);
-      z-index: 3;            /* above canvas */
+      z-index: 3;
     }
 
     #news-tv.show {
-      left: 30px;            /* slide in */
+      left: 30px;
       opacity: 1;
     }
 
@@ -120,9 +116,7 @@
       color: #bbb;
     }
 
-    #info strong {
-      color: #fff;
-    }
+    #info strong { color: #fff; }
   </style>
 </head>
 <body>
@@ -142,7 +136,7 @@
   </div>
 
   <div id="info">
-    <strong>Controls:</strong> ← / → move, <strong>Space</strong> shoot,
+    <strong>Controls:</strong> ← / → / A / D move, <strong>Space</strong> shoot,
     <strong>Enter</strong> start, <strong>R</strong> restart, <strong>M</strong> mute.
   </div>
 
@@ -161,14 +155,10 @@
     canvas.style.height = H + "px";
     ctx.scale(dpr, dpr);
 
-    const GAME_STATE = {
-      MENU: "menu",
-      PLAYING: "playing",
-      GAMEOVER: "gameover",
-    };
-
+    const GAME_STATE = { MENU: "menu", PLAYING: "playing", GAMEOVER: "gameover" };
     let state = GAME_STATE.MENU;
 
+    // High score
     let highScore = 0;
     try {
       const saved = localStorage.getItem("pixelInvadersHighScore");
@@ -177,11 +167,11 @@
       highScore = 0;
     }
 
-    // Ticker messages
+    // Ticker / news bar
     const tickerMessages = [
       "NEWS: Paperwork wave approaching the Capitol...",
-      "REPORT: Bush holds the line against the Democrats.",
-      "UPDATE: DNC strategists regroup for another assault.",
+      "REPORT: Red reformer holds the line against bureaucracy.",
+      "UPDATE: Blue paperwork units regroup for another assault.",
       "BRIEFING: Power-ups reported near the Capitol steps.",
       "ALERT: Diving envoys detected in the upper chamber."
     ];
@@ -200,7 +190,6 @@
     // IMAGES
     const playerImgNormal = new Image();
     playerImgNormal.src = "player_normal.png";
-
     const playerImgShoot = new Image();
     playerImgShoot.src = "player_shooting.png";
 
@@ -213,9 +202,6 @@
 
     const logoImg = new Image();
     logoImg.src = "logo.png";
-
-    const backgroundImg = new Image();
-    backgroundImg.src = "background.png";
 
     const heartImg = new Image();
     heartImg.src = "hearts.png";
@@ -234,8 +220,15 @@
     let musicBlocked = false;
 
     const hannityAudio = new Audio("hannity.mp3");
-    hannityAudio.volume = 1.0; // max volume (0.0–1.0 range)
-
+    hannityAudio.volume = 1.0;
+    // Boost Hannity louder via Web Audio
+    if (window.AudioContext || window.webkitAudioContext) {
+      const ctxA = new (window.AudioContext || window.webkitAudioContext)();
+      const track = ctxA.createMediaElementSource(hannityAudio);
+      const gainNode = ctxA.createGain();
+      gainNode.gain.value = 1.5; // +50% louder than normal
+      track.connect(gainNode).connect(ctxA.destination);
+    }
 
     function initSfxAudio() {
       try {
@@ -253,17 +246,16 @@
       try {
         initSfxAudio();
         if (!audioCtx) return;
-
         const now = audioCtx.currentTime;
         const osc = audioCtx.createOscillator();
         const gain = audioCtx.createGain();
-
         osc.connect(gain);
         gain.connect(audioCtx.destination);
 
         let duration = 0.12;
 
         if (type === "laser") {
+          // gunshot-like
           duration = 0.09;
           osc.type = "square";
           osc.frequency.setValueAtTime(280, now);
@@ -279,6 +271,7 @@
           gain.gain.exponentialRampToValueAtTime(0.001, now + duration);
         } else if (type === "hit") {
           osc.type = "square";
+          duration = 0.12;
           osc.frequency.setValueAtTime(200, now);
           osc.frequency.exponentialRampToValueAtTime(80, now + duration);
           gain.gain.setValueAtTime(0.35, now);
@@ -309,10 +302,9 @@
         if (!bgMusic) {
           bgMusic = new Audio(MUSIC_URL);
           bgMusic.loop = true;
-          bgMusic.volume = 0.2;
+          bgMusic.volume = 0.2; // 50% of previous
         }
         if (muted) return;
-
         bgMusic.play().catch(() => {
           musicBlocked = true;
         });
@@ -335,15 +327,13 @@
     function tryResumeMusic() {
       if (!musicBlocked || !bgMusic || muted) return;
       musicBlocked = false;
-      bgMusic.play().catch(() => {
-        musicBlocked = true;
-      });
+      bgMusic.play().catch(() => { musicBlocked = true; });
     }
 
     window.addEventListener("click", tryResumeMusic);
     window.addEventListener("keydown", tryResumeMusic);
 
-    // PLAYER
+    // PLAYER + UPGRADES
     const player = {
       w: 52,
       h: 52,
@@ -386,16 +376,17 @@
     let lastEnemyShotTime = 0;
 
     let lastDiveTime = 0;
+    let levelStartTime = 0;
 
     let totalEnemiesThisLevel = 0;
 
     // Combo / killstreak
-    const COMBO_WINDOW = 2500; // ms
+    const COMBO_WINDOW = 2500;
     let comboCount = 0;
     let comboTimer = 0;
 
     // Weapon heat (visual only)
-    let weaponHeat = 0; // 0..1
+    let weaponHeat = 0;
 
     const keys = {};
 
@@ -412,11 +403,13 @@
         startNewGame();
       }
 
-      if (state === GAME_STATE.GAMEOVER && (e.key === "r" || e.key === "R" || e.key === "Enter")) {
+      if (state === GAME_STATE.GAMEOVER &&
+          (e.key === "r" || e.key === "R" || e.key === "Enter")) {
         startNewGame();
       }
 
-      if (state === GAME_STATE.PLAYING && (e.key === " " || e.code === "Space")) {
+      if (state === GAME_STATE.PLAYING &&
+          (e.key === " " || e.code === "Space")) {
         shootPlayer();
       }
     });
@@ -431,26 +424,25 @@
       const mouseX = e.clientX - rect.left;
       const mouseY = e.clientY - rect.top;
 
-      const logoW = 500;
-      const aspect = logoImg.naturalWidth / (logoImg.naturalHeight || 1);
-      const logoH = logoW / (aspect || 2);
+      let logoW = 500;
+      let logoH = 240;
+      if (logoImg.complete && logoImg.naturalWidth > 0) {
+        const aspect = logoImg.naturalWidth / logoImg.naturalHeight;
+        logoH = logoW / aspect;
+      }
       const logoX = W / 2 - logoW / 2;
       const logoY = H / 2 - logoH / 2 - 40;
 
-      if (
-        mouseX >= logoX &&
-        mouseX <= logoX + logoW &&
-        mouseY >= logoY &&
-        mouseY <= logoY + logoH
-      ) {
+      if (mouseX >= logoX && mouseX <= logoX + logoW &&
+          mouseY >= logoY && mouseY <= logoY + logoH) {
         startNewGame();
       }
     });
 
     const levelMessages = {
-      1: { title: "LEVEL 1 – FIRST FILIBUSTER", subtitle: "The first wave of democrat ammendments is incoming." },
+      1: { title: "LEVEL 1 – FIRST FILIBUSTER", subtitle: "The first wave of blue paperwork is incoming." },
       2: { title: "LEVEL 2 – TAX STORM",        subtitle: "New taxes, more files – hold the line." },
-      3: { title: "LEVEL 3 – REGULATION FLOOD", subtitle: "Liberal Ideas flood the Capitol." },
+      3: { title: "LEVEL 3 – REGULATION FLOOD", subtitle: "Bureaucracy floods the Capitol." },
       4: { title: "LEVEL 4 – COMMITTEE CHAOS",  subtitle: "Endless hearings, no patience." },
       5: { title: "LEVEL 5 – SWAMP BOSS",       subtitle: "The swamp throws everything it has." }
     };
@@ -467,33 +459,26 @@
       addPopup(msg.title, msg.subtitle, 2600);
     }
 
-    // Hannity TV logic
     function showHannityNews(completedLevel) {
       if (completedLevel <= 0) return;
       const lines = [
-        "Sean Hannity: The Capitol has been secured once again by George W. Bush.",
-        "Sean Hannity: Democrats retreat as Republicans stand steady.",
-        "Sean Hannity: Liberals beaten back by American Patriotism.",
+        "Sean Hannity: The Capitol has been secured once again by our brave defender.",
+        "Sean Hannity: Blue forces retreat as paperwork piles vanish.",
+        "Sean Hannity: Bureaucracy beaten back by American strength.",
         "Sean Hannity: Another wave of nonsense defeated, folks.",
         "Sean Hannity: Incredible stand at the Capitol. On to the next one."
       ];
       const idx = (completedLevel - 1) % lines.length;
-      tvText.innerHTML =
-        '<span class="tag">FOX NEWS</span><br>' +
-        lines[idx];
-
+      tvText.innerHTML = '<span class="tag">FOX NEWS</span><br>' + lines[idx];
       newsTv.classList.add("show");
-
       if (!muted) {
         hannityAudio.currentTime = 0;
         hannityAudio.play().catch(() => {});
       }
-
-      setTimeout(() => {
-        newsTv.classList.remove("show");
-      }, 6000);
+      setTimeout(() => newsTv.classList.remove("show"), 6000);
     }
 
+    // ENEMIES / FORMATIONS
     function initEnemiesForLevel() {
       enemies.length = 0;
 
@@ -504,7 +489,7 @@
       const enemySpacingX = 90;
       const enemySpacingY = 70;
       const enemyStartX = 70;
-      const enemyStartY = 120;
+      const enemyStartY = 80; // higher, more room above player
 
       for (let row = 0; row < enemyRows; row++) {
         for (let col = 0; col < enemyCols; col++) {
@@ -540,29 +525,26 @@
     }
 
     function getFormationOffsets(row, col, t) {
-      let ox = 0;
-      let oy = 0;
+      let ox = 0, oy = 0;
 
-      if (formationType === 0) {
-        ox = 0;
-        oy = 0;
-      } else if (formationType === 1) {
-        const amp = 12;
-        const speed = 1.4;
+      if (formationType === 1) {
+        const amp = 12, speed = 1.4;
         oy = Math.sin(t * speed + col * 0.4) * amp;
       } else if (formationType === 2) {
-        const amp = 22;
-        const speed = 1.2;
+        const amp = 22, speed = 1.2;
         ox = Math.sin(t * speed + row * 0.6) * amp;
       }
-
       return [ox, oy];
     }
 
     function tryStartDive(now) {
       if (level < 2) return;
 
-      const interval = Math.max(1200, 3200 - level * 250);
+      // Grace period: no dive-bombers in first 3.5s of each level
+      if (now - levelStartTime < 3500) return;
+
+      // Dives less frequent and slower overall
+      const interval = Math.max(1800, 3800 - level * 200);
       if (now - lastDiveTime < interval) return;
 
       const candidates = enemies.filter(e => !e.isDiving);
@@ -577,20 +559,22 @@
       const dx = targetX - e.x;
       const dy = targetY - e.y;
 
-      const steps = 60;
+      const steps = 80; // more steps => slower dive
       let vx = dx / steps;
       let vy = dy / steps;
 
-      vx *= 0.75;
-      vy *= 0.75;
+      const speedScale = 0.6;
+      vx *= speedScale;
+      vy *= speedScale;
 
       e.vx = vx;
       e.vy = vy;
-      e.diveSpeedY = (0.10 + Math.random() * 0.05) * 0.75;
+      e.diveSpeedY = (0.05 + Math.random() * 0.03) * speedScale;
 
       lastDiveTime = now;
     }
 
+    // POWERUPS
     function spawnPowerup(x, y) {
       const overallChance = 0.12;
       if (Math.random() > overallChance) return;
@@ -662,6 +646,7 @@
       }
     }
 
+    // SHOOTING
     let lastPlayerShotTime = 0;
     const baseShootCooldown = 230;
 
@@ -753,14 +738,14 @@
       lastEnemyMoveTime = 0;
       lastEnemyShotTime = 0;
       lastTime = 0;
+      levelStartTime = performance.now();
       state = GAME_STATE.PLAYING;
       showLevelPopup();
       startBackgroundMusic();
     }
 
     function startNextLevel() {
-      const completedLevel = level; // level just cleared
-
+      const completedLevel = level;
       level++;
       bullets.length = 0;
       enemyBullets.length = 0;
@@ -772,6 +757,7 @@
       initEnemiesForLevel();
       lastEnemyMoveTime = 0;
       lastEnemyShotTime = 0;
+      levelStartTime = performance.now();
       showLevelPopup();
       showHannityNews(completedLevel);
     }
@@ -821,12 +807,11 @@
       }
 
       if (keys["ArrowLeft"] || keys["a"] || keys["A"]) {
-  player.x -= player.speed;
-}
-if (keys["ArrowRight"] || keys["d"] || keys["D"]) {
-  player.x += player.speed;
-}
-
+        player.x -= player.speed;
+      }
+      if (keys["ArrowRight"] || keys["d"] || keys["D"]) {
+        player.x += player.speed;
+      }
       if (player.x < 16) player.x = 16;
       if (player.x + player.w > W - 16) player.x = W - 16 - player.w;
 
@@ -901,12 +886,10 @@ if (keys["ArrowRight"] || keys["d"] || keys["D"]) {
       for (let i = enemies.length - 1; i >= 0; i--) {
         const e = enemies[i];
         if (!e.isDiving) continue;
-        if (
-          e.x < player.x + player.w &&
-          e.x + e.w > player.x &&
-          e.y < player.y + player.h &&
-          e.y + e.h > player.y
-        ) {
+        if (e.x < player.x + player.w &&
+            e.x + e.w > player.x &&
+            e.y < player.y + player.h &&
+            e.y + e.h > player.y) {
           enemies.splice(i, 1);
 
           if (now < upgrades.shieldUntil) {
@@ -921,9 +904,7 @@ if (keys["ArrowRight"] || keys["d"] || keys["D"]) {
             player.invincibleUntil = now + 1500;
             spawnExplosion(player.x + player.w / 2, player.y + player.h / 2, "#ffb74d");
             playSound("hit");
-            if (player.lives <= 0) {
-              gameOver();
-            }
+            if (player.lives <= 0) gameOver();
           }
         }
       }
@@ -937,12 +918,10 @@ if (keys["ArrowRight"] || keys["d"] || keys["D"]) {
 
         for (let j = enemies.length - 1; j >= 0; j--) {
           const e = enemies[j];
-          if (
-            b.x < e.x + e.w &&
-            b.x + b.w > e.x &&
-            b.y < e.y + e.h &&
-            b.y + b.h > e.y
-          ) {
+          if (b.x < e.x + e.w &&
+              b.x + b.w > e.x &&
+              b.y < e.y + e.h &&
+              b.y + b.h > e.y) {
             spawnExplosion(e.x + e.w / 2, e.y + e.h / 2, "#64b5f6");
             spawnPowerup(e.x, e.y);
             enemies.splice(j, 1);
@@ -965,12 +944,10 @@ if (keys["ArrowRight"] || keys["d"] || keys["D"]) {
 
       for (let i = enemyBullets.length - 1; i >= 0; i--) {
         const eb = enemyBullets[i];
-        if (
-          eb.x < player.x + player.w &&
-          eb.x + eb.w > player.x &&
-          eb.y < player.y + player.h &&
-          eb.y + eb.h > player.y
-        ) {
+        if (eb.x < player.x + player.w &&
+            eb.x + eb.w > player.x &&
+            eb.y < player.y + player.h &&
+            eb.y + eb.h > player.y) {
           enemyBullets.splice(i, 1);
 
           if (now < upgrades.shieldUntil) {
@@ -998,12 +975,10 @@ if (keys["ArrowRight"] || keys["d"] || keys["D"]) {
           continue;
         }
 
-        if (
-          p.x < player.x + player.w &&
-          p.x + p.w > player.x &&
-          p.y < player.y + player.h &&
-          p.y + p.h > player.y
-        ) {
+        if (p.x < player.x + player.w &&
+            p.x + p.w > player.x &&
+            p.y < player.y + player.h &&
+            p.y + p.h > player.y) {
           applyPowerup(p.type, now);
           powerups.splice(i, 1);
         }
@@ -1039,6 +1014,7 @@ if (keys["ArrowRight"] || keys["d"] || keys["D"]) {
       }
     }
 
+    // DRAW HELPERS
     function drawBackground() {
       ctx.clearRect(0, 0, W, H);
     }
@@ -1063,10 +1039,13 @@ if (keys["ArrowRight"] || keys["d"] || keys["D"]) {
 
     function drawPlayer() {
       const now = performance.now();
-      const flashing = now < player.invincibleUntil && Math.floor(now / 100) % 2 === 0;
+      const flashing = now < player.invincibleUntil &&
+                       Math.floor(now / 100) % 2 === 0;
 
       if (now < upgrades.shieldUntil) {
-        drawPixelRect(player.x - 6, player.y - 6, player.w + 12, player.h + 12, "#80deea", 0.25);
+        drawPixelRect(player.x - 6, player.y - 6,
+                      player.w + 12, player.h + 12,
+                      "#80deea", 0.25);
       }
 
       if (flashing) return;
@@ -1075,7 +1054,9 @@ if (keys["ArrowRight"] || keys["d"] || keys["D"]) {
       const img = isShooting ? playerImgShoot : playerImgNormal;
 
       if (img && img.complete) {
-        ctx.drawImage(img, Math.round(player.x), Math.round(player.y), player.w, player.h);
+        ctx.drawImage(img,
+          Math.round(player.x), Math.round(player.y),
+          player.w, player.h);
       } else {
         drawPixelRect(player.x, player.y + 10, player.w, player.h - 10, "#b71c1c");
         drawPixelRect(player.x + 12, player.y, 28, 10, "#f5d7b3");
@@ -1098,18 +1079,15 @@ if (keys["ArrowRight"] || keys["d"] || keys["D"]) {
     function drawBullets() {
       for (const b of bullets) drawPixelRect(b.x, b.y, b.w, b.h, "#fff");
     }
-
     function drawEnemyBullets() {
       for (const eb of enemyBullets) drawPixelRect(eb.x, eb.y, eb.w, eb.h, "#ffeb3b");
     }
-
     function drawParticles() {
       for (const p of particles) {
         const alpha = 1 - p.age / p.life;
         drawPixelRect(p.x, p.y, 3, 3, p.color, alpha);
       }
     }
-
     function drawPowerups() {
       for (const p of powerups) {
         let color = "#fff";
@@ -1132,7 +1110,7 @@ if (keys["ArrowRight"] || keys["d"] || keys["D"]) {
 
       ctx.font = "16px monospace";
 
-      // SCORE
+      // SCORE panel
       const scorePanelX = 10;
       const scorePanelY = 10;
       const scorePanelW = 200;
@@ -1170,7 +1148,7 @@ if (keys["ArrowRight"] || keys["d"] || keys["D"]) {
       }
       ctx.restore();
 
-      // LIVES
+      // LIVES panel
       const livesPanelX = 230;
       const livesPanelY = 10;
       const livesPanelW = 260;
@@ -1194,7 +1172,7 @@ if (keys["ArrowRight"] || keys["d"] || keys["D"]) {
       }
       ctx.restore();
 
-      // LEVEL + threat + progress
+      // LEVEL panel
       const levelPanelX = 510;
       const levelPanelY = 10;
       const levelPanelW = 200;
@@ -1248,7 +1226,7 @@ if (keys["ArrowRight"] || keys["d"] || keys["D"]) {
         drawPixelRect(barX + 1, barY + 1, (barW - 2) * progress, barH - 2, progColor, 1);
       }
 
-      // HI / SOUND
+      // HI/SOUND
       const hiPanelW = 200;
       const hiPanelX = W - hiPanelW - 10;
       const hiPanelY = 10;
@@ -1263,7 +1241,7 @@ if (keys["ArrowRight"] || keys["d"] || keys["D"]) {
       ctx.fillText(muted ? "MUTED" : "SOUND", hiPanelX + hiPanelW - 10, hiPanelY + 34);
       ctx.restore();
 
-      // PWR
+      // PWR panel
       const pwrPanelX = 10;
       const pwrPanelY = HUD_BAR_HEIGHT + 4;
       const pwrPanelW = 320;
@@ -1308,7 +1286,7 @@ if (keys["ArrowRight"] || keys["d"] || keys["D"]) {
       ctx.font = "16px monospace";
       ctx.restore();
 
-      // Ticker
+      // Ticker text
       if (tickerMessages.length) {
         ctx.save();
         ctx.textAlign = "center";
