@@ -880,6 +880,17 @@
       ctx.restore();
     }
 
+    // Small framed panel helper for HUD
+    function drawPanel(x, y, w, h, alpha = 0.6) {
+      ctx.save();
+      ctx.fillStyle = `rgba(0,0,0,${alpha})`;
+      ctx.fillRect(x, y, w, h);
+      ctx.strokeStyle = "rgba(255,255,255,0.3)";
+      ctx.lineWidth = 2;
+      ctx.strokeRect(x + 1, y + 1, w - 2, h - 2);
+      ctx.restore();
+    }
+
     function drawPlayer() {
       const now = performance.now();
       const flashing = now < player.invincibleUntil && Math.floor(now / 100) % 2 === 0;
@@ -943,51 +954,80 @@
       }
     }
 
-    // NEW HUD LAYOUT
+    // >>> NEW HUD STYLE <<<
     function drawHUD() {
-      ctx.fillStyle = "#fff";
-      ctx.font = "18px monospace";
+      const now = performance.now();
+
+      // Top HUD bar
+      drawPixelRect(0, 0, W, 70, "#000", 0.55);
+      // Fake scanline at bottom of bar
+      drawPixelRect(0, 70, W, 2, "#ffffff", 0.12);
+
+      ctx.font = "16px monospace";
+
+      // SCORE PANEL (left)
+      drawPanel(10, 10, 180, 40, 0.7);
+      ctx.save();
       ctx.textAlign = "left";
+      ctx.fillStyle = "#9fa8da";
+      ctx.fillText("SCORE", 20, 28);
+      ctx.fillStyle = "#ffeb3b";
+      ctx.fillText(String(score).padStart(4, " "), 20, 46);
+      ctx.restore();
 
-      const yTop = 26;
-
-      // Left: Score
-      ctx.fillText("SCORE: " + score, 16, yTop);
-
-      // Center-ish: Lives label + hearts
-      ctx.fillText("LIVES:", 200, yTop);
+      // LIVES PANEL (center-left)
+      drawPanel(210, 10, 260, 40, 0.7);
+      ctx.save();
+      ctx.textAlign = "left";
+      ctx.fillStyle = "#ff8a80";
+      ctx.fillText("LIVES", 220, 28);
 
       for (let i = 0; i < player.lives; i++) {
-        const x = 280 + i * 24; // spacing between hearts
-        const y = 8;
+        const x = 290 + i * 26;
+        const y = 16;
         const size = 22;
-
         if (heartImg.complete && heartImg.naturalWidth > 0) {
           ctx.drawImage(heartImg, x, y, size, size);
         } else {
           drawPixelRect(x + 4, y + 8, 12, 12, "#e53935");
         }
       }
+      ctx.restore();
 
-      // Level on the same top row
-      ctx.fillText("LEVEL: " + level, 560, yTop);
+      // LEVEL PANEL (center-right)
+      drawPanel(490, 10, 180, 40, 0.7);
+      ctx.save();
+      ctx.textAlign = "center";
+      ctx.fillStyle = "#80cbc4";
+      ctx.fillText("LEVEL", 490 + 90, 28);
+      ctx.fillStyle = "#ffffff";
+      ctx.fillText(String(level), 490 + 90, 46);
+      ctx.restore();
 
-      // Right: HI / SOUND
+      // HI/SOUND PANEL (right)
+      drawPanel(W - 200 - 10, 10, 200, 40, 0.7);
+      ctx.save();
       ctx.textAlign = "right";
-      ctx.fillText("HI: " + highScore, W - 16, yTop);
-      ctx.fillText(muted ? "MUTE" : "SOUND", W - 16, yTop + 24);
+      ctx.fillStyle = "#ffe082";
+      ctx.fillText("HI " + String(highScore).padStart(4, " "), W - 20, 28);
+      ctx.fillStyle = muted ? "#ef5350" : "#c5e1a5";
+      ctx.fillText(muted ? "MUTED" : "SOUND", W - 20, 46);
+      ctx.restore();
 
+      // POWER-UP BAR
+      drawPanel(10, 74, 260, 34, 0.7);
+      ctx.save();
       ctx.textAlign = "left";
+      ctx.fillStyle = "#b0bec5";
+      ctx.fillText("PWR", 20, 95);
 
-      // Powerups row a bit lower
-      const pwrY = 80;
-      ctx.fillText("PWR:", 16, pwrY);
-
-      const now = performance.now();
       let iconIndex = 0;
       function icon(active, color) {
         if (!active) return;
-        drawPixelRect(74 + iconIndex * 14, pwrY - 8, 12, 12, color);
+        const ix = 70 + iconIndex * 18;
+        const iy = 82;
+        drawPixelRect(ix, iy, 14, 14, "#000", 0.6);
+        drawPixelRect(ix + 2, iy + 2, 10, 10, color, 1);
         iconIndex++;
       }
 
@@ -997,6 +1037,8 @@
       icon(now < upgrades.pierceUntil, "#8bc34a");
       icon(now < upgrades.spreadUntil, "#ec407a");
       icon(now < upgrades.scoreMultUntil, "#ffc107");
+
+      ctx.restore();
     }
 
     function drawPopups() {
