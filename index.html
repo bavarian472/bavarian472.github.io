@@ -45,17 +45,17 @@
       left: 53%;
       transform: translateX(-50%);
       top: 328px;
-      z-index: 1;                 /* over background, under canvas */
+      z-index: 1;
       pointer-events: none;
     }
 
     canvas {
       position: relative;
-      z-index: 2;                 /* on top of bg + flag */
+      z-index: 2;
       image-rendering: pixelated;
       image-rendering: crisp-edges;
       border: 3px solid #444;
-      background: transparent;    /* so bg/flag stay visible */
+      background: transparent;
       width: 1024px;
       height: 724px;
       display: block;
@@ -76,7 +76,6 @@
 </head>
 <body>
   <div id="game-wrapper">
-    <!-- Background and flag live under the canvas -->
     <img id="bgImage" src="background.png" alt="Background">
     <img id="flagGif" src="flag.gif" alt="US Flag">
     <canvas id="game" width="1024" height="724"></canvas>
@@ -91,11 +90,11 @@
     const canvas = document.getElementById("game");
     const ctx = canvas.getContext("2d");
 
-    // Logical game resolution (what the code uses)
+    // Logical resolution
     const W = 1024;
     const H = 724;
 
-    // Scale canvas for device pixel ratio so it looks the same on all screens
+    // Scale for device pixel ratio
     const dpr = window.devicePixelRatio || 1;
     canvas.width = W * dpr;
     canvas.height = H * dpr;
@@ -141,6 +140,10 @@
     const backgroundImg = new Image();
     backgroundImg.src = "background.png";
 
+    // hearts for lives
+    const heartImg = new Image();
+    heartImg.src = "hearts.png";
+
     // --- AUDIO ---
 
     const MUSIC_URL =
@@ -178,7 +181,6 @@
         let duration = 0.12;
 
         if (type === "laser") {
-          // more gun-like
           duration = 0.09;
           osc.type = "square";
           osc.frequency.setValueAtTime(280, now);
@@ -297,8 +299,8 @@
     let lastEnemyMoveTime = 0;
     let formationOffsetX = 0;
     let formationOffsetY = 0;
-    let formationDir = 1; // 1 right, -1 left
-    let formationType = 0; // pattern per level
+    let formationDir = 1;
+    let formationType = 0;
 
     let enemyShootInterval = 1200;
     let lastEnemyShotTime = 0;
@@ -421,27 +423,23 @@
       enemyShootInterval = Math.max(450, 1200 - (level - 1) * 120);
 
       // pick formation pattern for this level
-      formationType = (level - 1) % 3; // 0,1,2 patterns
+      formationType = (level - 1) % 3;
 
       lastDiveTime = 0;
     }
 
-    // pattern offsets based on row/col/time and formationType
     function getFormationOffsets(row, col, t) {
       let ox = 0;
       let oy = 0;
 
       if (formationType === 0) {
-        // Classic: no extra offsets
         ox = 0;
         oy = 0;
       } else if (formationType === 1) {
-        // Columns wave up/down together
         const amp = 12;
         const speed = 1.4;
         oy = Math.sin(t * speed + col * 0.4) * amp;
       } else if (formationType === 2) {
-        // Rows snake slightly left/right
         const amp = 22;
         const speed = 1.2;
         ox = Math.sin(t * speed + row * 0.6) * amp;
@@ -450,11 +448,11 @@
       return [ox, oy];
     }
 
-    // start a dive for one random enemy (25% slower than original)
+    // start a dive for one random enemy (25% slower)
     function tryStartDive(now) {
-      if (level < 2) return; // keep level 1 simple
+      if (level < 2) return;
 
-      const interval = Math.max(1200, 3200 - level * 250); // faster on higher levels
+      const interval = Math.max(1200, 3200 - level * 250);
       if (now - lastDiveTime < interval) return;
 
       const candidates = enemies.filter(e => !e.isDiving);
@@ -463,25 +461,21 @@
       const e = candidates[Math.floor(Math.random() * candidates.length)];
       e.isDiving = true;
 
-      // aim directly toward player's current position
       const targetX = player.x + player.w / 2;
       const targetY = player.y + player.h / 2;
 
       const dx = targetX - e.x;
       const dy = targetY - e.y;
 
-      const steps = 60; // frames-ish to reach player
+      const steps = 60;
       let vx = dx / steps;
       let vy = dy / steps;
 
-      // make divers ~25% slower
       vx *= 0.75;
       vy *= 0.75;
 
       e.vx = vx;
       e.vy = vy;
-
-      // also reduce "gravity" by ~25%
       e.diveSpeedY = (0.10 + Math.random() * 0.05) * 0.75;
 
       lastDiveTime = now;
@@ -712,12 +706,11 @@
         if (eb.y > H + 50) enemyBullets.splice(i, 1);
       }
 
-      // --- formation movement ---
+      // formation movement
       const moveNow = now;
       if (moveNow - lastEnemyMoveTime > 20) {
         formationOffsetX += enemyDx * formationDir;
 
-        // compute min/max x with pattern offsets, using only non-diving enemies
         let minX = Infinity;
         let maxX = -Infinity;
         const t = moveNow / 1000;
@@ -732,10 +725,9 @@
 
         if (minX !== Infinity && (minX <= 16 || maxX >= W - 16)) {
           formationDir *= -1;
-          formationOffsetX += enemyDx * formationDir; // small nudge back inside
+          formationOffsetX += enemyDx * formationDir;
           formationOffsetY += enemyStepDown;
 
-          // check if formation reached player
           let maxY = -Infinity;
           for (const e of enemies) {
             if (e.isDiving) continue;
@@ -752,7 +744,6 @@
         lastEnemyMoveTime = moveNow;
       }
 
-      // apply formation + pattern or diving motion
       const t = now / 1000;
       for (const e of enemies) {
         if (e.isDiving) {
@@ -765,9 +756,8 @@
           e.y = e.baseY + formationOffsetY + oy;
         }
       }
-      // --- end formation movement ---
 
-      // enemy sprite collision with player (mostly divers)
+      // diving enemy collision with player
       for (let i = enemies.length - 1; i >= 0; i--) {
         const e = enemies[i];
         if (!e.isDiving) continue;
@@ -798,12 +788,10 @@
         }
       }
 
-      // maybe launch a new dive
       tryStartDive(now);
-
       enemyShoot();
 
-      // Bullet vs enemy
+      // bullets vs enemies
       for (let i = bullets.length - 1; i >= 0; i--) {
         const b = bullets[i];
         let hit = false;
@@ -834,7 +822,7 @@
         if (hit && i >= bullets.length) continue;
       }
 
-      // Enemy bullet vs player
+      // enemy bullets vs player
       for (let i = enemyBullets.length - 1; i >= 0; i--) {
         const eb = enemyBullets[i];
         if (
@@ -862,7 +850,7 @@
         }
       }
 
-      // Powerups
+      // powerups
       for (let i = powerups.length - 1; i >= 0; i--) {
         const p = powerups[i];
         p.y += p.dy;
@@ -882,7 +870,7 @@
         }
       }
 
-      // Explosion particles
+      // particles
       for (let i = particles.length - 1; i >= 0; i--) {
         const p = particles[i];
         p.x += p.dx;
@@ -892,7 +880,7 @@
         if (p.age > p.life) particles.splice(i, 1);
       }
 
-      // remove diving enemies that left the screen
+      // remove divers offscreen
       for (let i = enemies.length - 1; i >= 0; i--) {
         const e = enemies[i];
         if (e.isDiving && (e.y > H + 80 || e.x < -80 || e.x > W + 80)) {
@@ -999,8 +987,18 @@
       ctx.fillText("LEVEL: " + level, 16, 48);
 
       ctx.fillText("LIVES:", 200, 26);
+
+      // hearts instead of red squares
       for (let i = 0; i < player.lives; i++) {
-        drawPixelRect(270 + i * 14, 18, 10, 10, "#e53935");
+        const x = 270 + i * 18;
+        const y = 12;
+        const size = 16;
+
+        if (heartImg.complete && heartImg.naturalWidth > 0) {
+          ctx.drawImage(heartImg, x, y, size, size);
+        } else {
+          drawPixelRect(x + 3, y + 6, 10, 10, "#e53935");
+        }
       }
 
       ctx.fillText("SIDE: RED", 16, 70);
@@ -1050,7 +1048,6 @@
       ctx.restore();
     }
 
-    // --- MENU WITH LOGO ---
     function drawMenu() {
       drawBackground();
 
@@ -1115,7 +1112,6 @@
       ctx.textAlign = "left";
     }
 
-    // --- MAIN LOOP ---
     function loop(timestamp) {
       if (!lastTime) lastTime = timestamp;
       const dt = timestamp - lastTime;
