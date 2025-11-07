@@ -943,18 +943,22 @@
       }
     }
 
+    // NEW HUD LAYOUT
     function drawHUD() {
       ctx.fillStyle = "#fff";
-      ctx.font = "18px monospace"; // bigger overall HUD text
+      ctx.font = "18px monospace";
       ctx.textAlign = "left";
-      ctx.fillText("SCORE: " + score, 16, 28);
-      ctx.fillText("LEVEL: " + level, 16, 52);
 
-      ctx.fillText("LIVES:", 200, 28);
+      const yTop = 26;
 
-      // Bigger hearts + more spacing
+      // Left: Score
+      ctx.fillText("SCORE: " + score, 16, yTop);
+
+      // Center-ish: Lives label + hearts
+      ctx.fillText("LIVES:", 200, yTop);
+
       for (let i = 0; i < player.lives; i++) {
-        const x = 280 + i * 24; // wider spacing
+        const x = 280 + i * 24; // spacing between hearts
         const y = 8;
         const size = 22;
 
@@ -965,20 +969,25 @@
         }
       }
 
-      ctx.fillText("SIDE: RED", 16, 76);
+      // Level on the same top row
+      ctx.fillText("LEVEL: " + level, 560, yTop);
 
+      // Right: HI / SOUND
       ctx.textAlign = "right";
-      ctx.fillText("HI: " + highScore, W - 16, 28);
-      ctx.fillText(muted ? "MUTE" : "SOUND", W - 16, 52);
+      ctx.fillText("HI: " + highScore, W - 16, yTop);
+      ctx.fillText(muted ? "MUTE" : "SOUND", W - 16, yTop + 24);
+
       ctx.textAlign = "left";
 
-      const now = performance.now();
-      ctx.fillText("PWR:", 16, 100);
+      // Powerups row a bit lower
+      const pwrY = 80;
+      ctx.fillText("PWR:", 16, pwrY);
 
+      const now = performance.now();
       let iconIndex = 0;
       function icon(active, color) {
         if (!active) return;
-        drawPixelRect(74 + iconIndex * 14, 92, 12, 12, color);
+        drawPixelRect(74 + iconIndex * 14, pwrY - 8, 12, 12, color);
         iconIndex++;
       }
 
