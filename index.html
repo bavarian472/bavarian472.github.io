@@ -21,14 +21,12 @@
       height: 100vh;
     }
 
-    /* Wrapper to layer background, flag and canvas */
     #game-wrapper {
       position: relative;
       width: 1024px;
       height: 724px;
     }
 
-    /* Background image under everything */
     #bgImage {
       position: absolute;
       inset: 0;
@@ -38,7 +36,6 @@
       pointer-events: none;
     }
 
-    /* Animated flag between background and canvas content */
     #flagGif {
       position: absolute;
       width: 42px;
@@ -90,11 +87,9 @@
     const canvas = document.getElementById("game");
     const ctx = canvas.getContext("2d");
 
-    // Logical resolution
     const W = 1024;
     const H = 724;
 
-    // Scale for device pixel ratio
     const dpr = window.devicePixelRatio || 1;
     canvas.width = W * dpr;
     canvas.height = H * dpr;
@@ -110,7 +105,6 @@
 
     let state = GAME_STATE.MENU;
 
-    // High score
     let highScore = 0;
     try {
       const saved = localStorage.getItem("pixelInvadersHighScore");
@@ -119,8 +113,7 @@
       highScore = 0;
     }
 
-    // --- IMAGES ---
-
+    // IMAGES
     const playerImgNormal = new Image();
     playerImgNormal.src = "player_normal.png";
 
@@ -140,12 +133,10 @@
     const backgroundImg = new Image();
     backgroundImg.src = "background.png";
 
-    // hearts for lives
     const heartImg = new Image();
     heartImg.src = "hearts.png";
 
-    // --- AUDIO ---
-
+    // AUDIO
     const MUSIC_URL =
       "https://github.com/bavarian472/bavarian472.github.io/blob/main/music.mp3?raw=true";
 
@@ -260,7 +251,7 @@
     window.addEventListener("click", tryResumeMusic);
     window.addEventListener("keydown", tryResumeMusic);
 
-    // --- PLAYER ---
+    // PLAYER
     const player = {
       w: 52,
       h: 52,
@@ -272,7 +263,6 @@
       shootingUntil: 0,
     };
 
-    // Upgrades
     const upgrades = {
       rapidUntil: 0,
       doubleUntil: 0,
@@ -282,7 +272,6 @@
       scoreMultUntil: 0,
     };
 
-    // --- GAME DATA ---
     let level = 1;
     let score = 0;
 
@@ -293,7 +282,6 @@
     const powerups = [];
     const popups = [];
 
-    // formation movement
     let enemyDx = 0.6;
     let enemyStepDown = 24;
     let lastEnemyMoveTime = 0;
@@ -305,7 +293,6 @@
     let enemyShootInterval = 1200;
     let lastEnemyShotTime = 0;
 
-    // dive behavior
     let lastDiveTime = 0;
 
     const keys = {};
@@ -336,7 +323,6 @@
       keys[e.key] = false;
     });
 
-    // click logo to start
     canvas.addEventListener("click", (e) => {
       if (state !== GAME_STATE.MENU) return;
       const rect = canvas.getBoundingClientRect();
@@ -359,7 +345,6 @@
       }
     });
 
-    // --- LEVEL TEXTS ---
     const levelMessages = {
       1: { title: "LEVEL 1 – FIRST FILIBUSTER", subtitle: "The first wave of blue paperwork is incoming." },
       2: { title: "LEVEL 2 – TAX STORM",        subtitle: "New taxes, more files – hold the line." },
@@ -380,7 +365,6 @@
       addPopup(msg.title, msg.subtitle, 2600);
     }
 
-    // --- ENEMIES WITH FORMATIONS ---
     function initEnemiesForLevel() {
       enemies.length = 0;
 
@@ -415,16 +399,12 @@
         }
       }
 
-      // reset formation
       formationOffsetX = 0;
       formationOffsetY = 0;
       formationDir = 1;
       enemyDx = 0.5 + level * 0.2;
       enemyShootInterval = Math.max(450, 1200 - (level - 1) * 120);
-
-      // pick formation pattern for this level
       formationType = (level - 1) % 3;
-
       lastDiveTime = 0;
     }
 
@@ -448,7 +428,6 @@
       return [ox, oy];
     }
 
-    // start a dive for one random enemy (25% slower)
     function tryStartDive(now) {
       if (level < 2) return;
 
@@ -481,7 +460,6 @@
       lastDiveTime = now;
     }
 
-    // --- POWERUPS ---
     function spawnPowerup(x, y) {
       const overallChance = 0.12;
       if (Math.random() > overallChance) return;
@@ -537,7 +515,6 @@
       playSound("powerup");
     }
 
-    // --- EXPLOSIONS ---
     function spawnExplosion(x, y, color) {
       for (let i = 0; i < 20; i++) {
         const angle = Math.random() * Math.PI * 2;
@@ -554,7 +531,6 @@
       }
     }
 
-    // --- PLAYER SHOOT ---
     let lastPlayerShotTime = 0;
     const baseShootCooldown = 230;
 
@@ -593,7 +569,6 @@
       playSound("laser");
     }
 
-    // --- ENEMY SHOOT ---
     function enemyShoot() {
       if (enemies.length === 0) return;
       const now = performance.now();
@@ -622,7 +597,6 @@
       lastEnemyShotTime = now;
     }
 
-    // --- START/RESET ---
     function startNewGame() {
       score = 0;
       level = 1;
@@ -672,7 +646,6 @@
       }
     }
 
-    // --- UPDATE ---
     let lastTime = 0;
 
     function update(dt) {
@@ -706,7 +679,6 @@
         if (eb.y > H + 50) enemyBullets.splice(i, 1);
       }
 
-      // formation movement
       const moveNow = now;
       if (moveNow - lastEnemyMoveTime > 20) {
         formationOffsetX += enemyDx * formationDir;
@@ -757,7 +729,6 @@
         }
       }
 
-      // diving enemy collision with player
       for (let i = enemies.length - 1; i >= 0; i--) {
         const e = enemies[i];
         if (!e.isDiving) continue;
@@ -791,7 +762,6 @@
       tryStartDive(now);
       enemyShoot();
 
-      // bullets vs enemies
       for (let i = bullets.length - 1; i >= 0; i--) {
         const b = bullets[i];
         let hit = false;
@@ -822,7 +792,6 @@
         if (hit && i >= bullets.length) continue;
       }
 
-      // enemy bullets vs player
       for (let i = enemyBullets.length - 1; i >= 0; i--) {
         const eb = enemyBullets[i];
         if (
@@ -850,7 +819,6 @@
         }
       }
 
-      // powerups
       for (let i = powerups.length - 1; i >= 0; i--) {
         const p = powerups[i];
         p.y += p.dy;
@@ -870,7 +838,6 @@
         }
       }
 
-      // particles
       for (let i = particles.length - 1; i >= 0; i--) {
         const p = particles[i];
         p.x += p.dx;
@@ -880,7 +847,6 @@
         if (p.age > p.life) particles.splice(i, 1);
       }
 
-      // remove divers offscreen
       for (let i = enemies.length - 1; i >= 0; i--) {
         const e = enemies[i];
         if (e.isDiving && (e.y > H + 80 || e.x < -80 || e.x > W + 80)) {
@@ -901,8 +867,6 @@
         if (popups[i].age > popups[i].life) popups.splice(i, 1);
       }
     }
-
-    // --- DRAW HELPERS ---
 
     function drawBackground() {
       ctx.clearRect(0, 0, W, H);
@@ -981,40 +945,40 @@
 
     function drawHUD() {
       ctx.fillStyle = "#fff";
-      ctx.font = "16px monospace";
+      ctx.font = "18px monospace"; // bigger overall HUD text
       ctx.textAlign = "left";
-      ctx.fillText("SCORE: " + score, 16, 26);
-      ctx.fillText("LEVEL: " + level, 16, 48);
+      ctx.fillText("SCORE: " + score, 16, 28);
+      ctx.fillText("LEVEL: " + level, 16, 52);
 
-      ctx.fillText("LIVES:", 200, 26);
+      ctx.fillText("LIVES:", 200, 28);
 
-      // hearts instead of red squares
+      // Bigger hearts + more spacing
       for (let i = 0; i < player.lives; i++) {
-        const x = 270 + i * 18;
-        const y = 12;
-        const size = 16;
+        const x = 280 + i * 24; // wider spacing
+        const y = 8;
+        const size = 22;
 
         if (heartImg.complete && heartImg.naturalWidth > 0) {
           ctx.drawImage(heartImg, x, y, size, size);
         } else {
-          drawPixelRect(x + 3, y + 6, 10, 10, "#e53935");
+          drawPixelRect(x + 4, y + 8, 12, 12, "#e53935");
         }
       }
 
-      ctx.fillText("SIDE: RED", 16, 70);
+      ctx.fillText("SIDE: RED", 16, 76);
 
       ctx.textAlign = "right";
-      ctx.fillText("HI: " + highScore, W - 16, 26);
-      ctx.fillText(muted ? "MUTE" : "SOUND", W - 16, 48);
+      ctx.fillText("HI: " + highScore, W - 16, 28);
+      ctx.fillText(muted ? "MUTE" : "SOUND", W - 16, 52);
       ctx.textAlign = "left";
 
       const now = performance.now();
-      ctx.fillText("PWR:", 16, 94);
+      ctx.fillText("PWR:", 16, 100);
 
       let iconIndex = 0;
       function icon(active, color) {
         if (!active) return;
-        drawPixelRect(74 + iconIndex * 14, 86, 12, 12, color);
+        drawPixelRect(74 + iconIndex * 14, 92, 12, 12, color);
         iconIndex++;
       }
 
