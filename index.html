@@ -1,0 +1,340 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Team Portfolio - Startseite</title>
+    
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    
+    <!-- Bootstrap Icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+    
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary sticky-top">
+        <div class="container">
+            <a class="navbar-brand fw-bold" href="index.html">
+                <i class="bi bi-code-slash"></i> Team Portfolio
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item">
+                        <a class="nav-link active" href="index.html">Startseite</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="about.html">Über uns</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="contact.html">Kontakt</a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Hero Carousel (Interaktives Element 1) -->
+    <div id="heroCarousel" class="carousel slide" data-bs-ride="carousel">
+        <div class="carousel-indicators">
+            <button type="button" data-bs-target="#heroCarousel" data-bs-slide-to="0" class="active"></button>
+            <button type="button" data-bs-target="#heroCarousel" data-bs-slide-to="1"></button>
+            <button type="button" data-bs-target="#heroCarousel" data-bs-slide-to="2"></button>
+        </div>
+        <div class="carousel-inner">
+            <div class="carousel-item active">
+                <div class="carousel-slide slide-1">
+                    <div class="carousel-caption">
+                        <h1 class="display-3 fw-bold">Willkommen</h1>
+                        <p class="lead">Entdecken Sie unser Portfolio</p>
+                    </div>
+                </div>
+            </div>
+            <div class="carousel-item">
+                <div class="carousel-slide slide-2">
+                    <div class="carousel-caption">
+                        <h1 class="display-3 fw-bold">Innovation</h1>
+                        <p class="lead">Kreative Lösungen für digitale Herausforderungen</p>
+                    </div>
+                </div>
+            </div>
+            <div class="carousel-item">
+                <div class="carousel-slide slide-3">
+                    <div class="carousel-caption">
+                        <h1 class="display-3 fw-bold">Zusammenarbeit</h1>
+                        <p class="lead">Gemeinsam zum Erfolg</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <button class="carousel-control-prev" type="button" data-bs-target="#heroCarousel" data-bs-slide="prev">
+            <span class="carousel-control-prev-icon"></span>
+        </button>
+        <button class="carousel-control-next" type="button" data-bs-target="#heroCarousel" data-bs-slide="next">
+            <span class="carousel-control-next-icon"></span>
+        </button>
+    </div>
+
+    <!-- Dynamische Begrüßung (Interaktives Element 2 - JavaScript) -->
+    <div class="container mt-5">
+        <div class="card shadow-lg border-0">
+            <div class="card-body p-4">
+                <div class="d-flex align-items-center">
+                    <i class="bi bi-clock-history text-primary fs-1 me-3"></i>
+                    <div>
+                        <h2 class="mb-1" id="greeting">Willkommen!</h2>
+                        <p class="text-muted mb-0">Aktuelle Zeit: <span id="current-time"></span></p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Projektbeschreibung -->
+    <div class="container my-5">
+        <div class="row">
+            <div class="col-lg-8 mx-auto">
+                <h2 class="text-center mb-4">Über dieses Projekt</h2>
+                <p class="lead text-center text-muted mb-5">
+                    Diese Website wurde im Rahmen der Portfolioprüfung für das Modul 
+                    "Clientseitige Programmierung" entwickelt und demonstriert moderne Webtechnologien.
+                </p>
+            </div>
+        </div>
+
+        <!-- Feature Cards (Grid-System) -->
+        <div class="row g-4">
+            <div class="col-md-4">
+                <div class="card h-100 shadow-sm feature-card">
+                    <div class="card-body text-center">
+                        <div class="feature-icon">
+                            <i class="bi bi-lightbulb text-primary"></i>
+                        </div>
+                        <h4 class="card-title">Kreativität</h4>
+                        <p class="card-text text-muted">
+                            Innovative Ideen und moderne Webentwicklung mit HTML5, CSS3 und JavaScript
+                        </p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card h-100 shadow-sm feature-card">
+                    <div class="card-body text-center">
+                        <div class="feature-icon">
+                            <i class="bi bi-people text-primary"></i>
+                        </div>
+                        <h4 class="card-title">Teamwork</h4>
+                        <p class="card-text text-muted">
+                            Effektive Zusammenarbeit im Pair-Programming-Verfahren
+                        </p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card h-100 shadow-sm feature-card">
+                    <div class="card-body text-center">
+                        <div class="feature-icon">
+                            <i class="bi bi-lightning text-primary"></i>
+                        </div>
+                        <h4 class="card-title">Performance</h4>
+                        <p class="card-text text-muted">
+                            Schnelle, responsive Webanwendungen mit Bootstrap 5
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Accordion für Details (Interaktives Element 3) -->
+    <div class="container my-5">
+        <div class="row">
+            <div class="col-lg-8 mx-auto">
+                <h3 class="text-center mb-4">Weitere Informationen</h3>
+                <div class="accordion" id="projectAccordion">
+                    <div class="accordion-item">
+                        <h2 class="accordion-header">
+                            <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#collapseOne">
+                                Projektziele
+                            </button>
+                        </h2>
+                        <div id="collapseOne" class="accordion-collapse collapse show" data-bs-parent="#projectAccordion">
+                            <div class="accordion-body">
+                                <p>Ziel dieses Projekts ist die Entwicklung einer professionellen, responsiven Website 
+                                mit modernen Webtechnologien. Die Website demonstriert:</p>
+                                <ul>
+                                    <li>Semantisches HTML5 und barrierefreie Strukturen</li>
+                                    <li>Responsive Design mit Bootstrap 5 Grid-System</li>
+                                    <li>JavaScript-Interaktivität und Formularvalidierung</li>
+                                    <li>Prinzipien der Usability und User Experience</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="accordion-item">
+                        <h2 class="accordion-header">
+                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseTwo">
+                                Verwendete Technologien
+                            </button>
+                        </h2>
+                        <div id="collapseTwo" class="accordion-collapse collapse" data-bs-parent="#projectAccordion">
+                            <div class="accordion-body">
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <h5>Frontend</h5>
+                                        <ul>
+                                            <li>HTML5 (semantische Tags)</li>
+                                            <li>CSS3 (Custom Properties, Flexbox, Grid)</li>
+                                            <li>JavaScript ES6+</li>
+                                            <li>Bootstrap 5.3</li>
+                                        </ul>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <h5>Tools & Libraries</h5>
+                                        <ul>
+                                            <li>Bootstrap Icons</li>
+                                            <li>Google Fonts</li>
+                                            <li>Responsive Images</li>
+                                            <li>Form Validation API</li>
+                                        </ul>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="accordion-item">
+                        <h2 class="accordion-header">
+                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseThree">
+                                Features & Highlights
+                            </button>
+                        </h2>
+                        <div id="collapseThree" class="accordion-collapse collapse" data-bs-parent="#projectAccordion">
+                            <div class="accordion-body">
+                                <div class="table-responsive">
+                                    <table class="table table-striped">
+                                        <thead>
+                                            <tr>
+                                                <th>Feature</th>
+                                                <th>Beschreibung</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <tr>
+                                                <td><i class="bi bi-phone text-primary"></i> Responsive Design</td>
+                                                <td>Optimiert für Desktop, Tablet und Mobile</td>
+                                            </tr>
+                                            <tr>
+                                                <td><i class="bi bi-clock text-primary"></i> Dynamische Inhalte</td>
+                                                <td>Zeitabhängige Begrüßung mit JavaScript</td>
+                                            </tr>
+                                            <tr>
+                                                <td><i class="bi bi-check-circle text-primary"></i> Formularvalidierung</td>
+                                                <td>Clientseitige Validierung mit Feedback</td>
+                                            </tr>
+                                            <tr>
+                                                <td><i class="bi bi-image text-primary"></i> Carousel & Galerie</td>
+                                                <td>Interaktive Bilderpräsentation</td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Video Einbindung (Multimediaelement 4) -->
+    <div class="container my-5">
+        <div class="row">
+            <div class="col-lg-8 mx-auto">
+                <div class="card shadow">
+                    <div class="card-body">
+                        <h3 class="card-title text-center mb-4">
+                            <i class="bi bi-play-circle"></i> Projekt-Präsentation
+                        </h3>
+                        <div class="ratio ratio-16x9">
+                            <video controls class="rounded">
+                                <source src="assets/video/presentation.mp4" type="video/mp4">
+                                <!-- Fallback für Browser ohne Video-Unterstützung -->
+                                Ihr Browser unterstützt das Video-Tag nicht.
+                            </video>
+                        </div>
+                        <p class="text-muted text-center mt-3 mb-0">
+                            <small>Hinweis: Videodatei muss im Ordner assets/video/ hinterlegt werden</small>
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Call to Action -->
+    <div class="container my-5">
+        <div class="card bg-primary text-white">
+            <div class="card-body text-center p-5">
+                <h3 class="card-title">Lernen Sie uns kennen!</h3>
+                <p class="card-text mb-4">Erfahren Sie mehr über unser Team und unsere Kompetenzen</p>
+                <a href="about.html" class="btn btn-light btn-lg me-2">
+                    <i class="bi bi-people-fill"></i> Über uns
+                </a>
+                <a href="contact.html" class="btn btn-outline-light btn-lg">
+                    <i class="bi bi-envelope"></i> Kontakt
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="bg-dark text-white py-5 mt-5">
+        <div class="container">
+            <div class="row">
+                <div class="col-md-4 mb-4">
+                    <h5 class="mb-3">
+                        <i class="bi bi-code-slash"></i> Team Portfolio
+                    </h5>
+                    <p class="text-muted">
+                        Portfolioprüfung Clientseitige Programmierung<br>
+                        Hochschule München<br>
+                        Wintersemester 2025
+                    </p>
+                </div>
+                <div class="col-md-4 mb-4">
+                    <h5 class="mb-3">Quick Links</h5>
+                    <ul class="list-unstyled">
+                        <li><a href="index.html" class="text-muted text-decoration-none">Startseite</a></li>
+                        <li><a href="about.html" class="text-muted text-decoration-none">Über uns</a></li>
+                        <li><a href="contact.html" class="text-muted text-decoration-none">Kontakt</a></li>
+                    </ul>
+                </div>
+                <div class="col-md-4 mb-4">
+                    <h5 class="mb-3">Folgen Sie uns</h5>
+                    <div class="d-flex gap-3">
+                        <a href="#" class="text-white fs-4"><i class="bi bi-github"></i></a>
+                        <a href="#" class="text-white fs-4"><i class="bi bi-linkedin"></i></a>
+                        <a href="#" class="text-white fs-4"><i class="bi bi-envelope"></i></a>
+                    </div>
+                </div>
+            </div>
+            <hr class="my-4 bg-secondary">
+            <p class="text-center text-muted mb-0">
+                &copy; 2025 Team Portfolio. Alle Rechte vorbehalten.
+            </p>
+        </div>
+    </footer>
+
+    <!-- Bootstrap 5 JS Bundle (inkludiert Popper) -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <!-- Custom JavaScript -->
+    <script src="js/script.js"></script>
+</body>
+</html>

@@ -1,0 +1,563 @@
+/* ==========================================
+   Portfolio Website - Custom CSS
+   Clientseitige Programmierung
+   Hochschule München
+   ========================================== */
+
+/* ==========================================
+   CSS Custom Properties (Farbpalette)
+   ========================================== */
+:root {
+    /* Primärfarben - Blautöne für Professionalität und Vertrauen */
+    --primary-color: #4F46E5;      /* Indigo */
+    --primary-dark: #4338CA;       /* Dunkleres Indigo */
+    --primary-light: #818CF8;      /* Helleres Indigo */
+    
+    /* Sekundärfarben - Violett für Kreativität */
+    --secondary-color: #8B5CF6;    /* Violett */
+    --secondary-dark: #7C3AED;     /* Dunkleres Violett */
+    --secondary-light: #A78BFA;    /* Helleres Violett */
+    
+    /* Akzentfarbe */
+    --accent-color: #EC4899;       /* Pink für Highlights */
+    
+    /* Neutrale Farben */
+    --text-primary: #1F2937;       /* Dunkelgrau für Text */
+    --text-secondary: #6B7280;     /* Mittelgrau für sekundären Text */
+    --background: #F9FAFB;         /* Sehr helles Grau für Hintergrund */
+    --white: #FFFFFF;
+    --border-color: #E5E7EB;
+    
+    /* Statusfarben */
+    --success: #10B981;
+    --error: #EF4444;
+    --warning: #F59E0B;
+    
+    /* Schatten */
+    --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+    --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+    --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+    --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+    
+    /* Transitions */
+    --transition: all 0.3s ease;
+}
+
+/* ==========================================
+   Bootstrap Overrides
+   ========================================== */
+.bg-primary {
+    background-color: var(--primary-color) !important;
+}
+
+.bg-gradient-primary {
+    background: linear-gradient(135deg, var(--primary-color), var(--secondary-color)) !important;
+}
+
+.text-primary {
+    color: var(--primary-color) !important;
+}
+
+.btn-primary {
+    background-color: var(--primary-color);
+    border-color: var(--primary-color);
+}
+
+.btn-primary:hover {
+    background-color: var(--primary-dark);
+    border-color: var(--primary-dark);
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-lg);
+}
+
+/* ==========================================
+   Base Styles
+   ========================================== */
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background-color: var(--background);
+    color: var(--text-primary);
+    line-height: 1.6;
+}
+
+/* Smooth Scrolling */
+html {
+    scroll-behavior: smooth;
+}
+
+/* Links */
+a {
+    transition: var(--transition);
+}
+
+/* ==========================================
+   Navigation
+   ========================================== */
+.navbar {
+    box-shadow: var(--shadow-md);
+    transition: var(--transition);
+}
+
+.navbar-brand {
+    font-size: 1.5rem;
+    transition: var(--transition);
+}
+
+.navbar-brand:hover {
+    transform: scale(1.05);
+}
+
+.nav-link {
+    position: relative;
+    font-weight: 500;
+    padding: 0.5rem 1rem !important;
+    transition: var(--transition);
+}
+
+.nav-link::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 50%;
+    width: 0;
+    height: 2px;
+    background-color: var(--white);
+    transition: var(--transition);
+    transform: translateX(-50%);
+}
+
+.nav-link:hover::after,
+.nav-link.active::after {
+    width: 80%;
+}
+
+/* ==========================================
+   Hero Carousel
+   ========================================== */
+.carousel-slide {
+    height: 400px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+}
+
+.slide-1 {
+    background: linear-gradient(135deg, #4F46E5, #6366F1);
+}
+
+.slide-2 {
+    background: linear-gradient(135deg, #8B5CF6, #A78BFA);
+}
+
+.slide-3 {
+    background: linear-gradient(135deg, #4F46E5, #8B5CF6);
+}
+
+.carousel-caption {
+    position: static;
+    padding: 2rem;
+}
+
+.carousel-control-prev-icon,
+.carousel-control-next-icon {
+    width: 3rem;
+    height: 3rem;
+}
+
+/* ==========================================
+   Page Header
+   ========================================== */
+.page-header {
+    background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+    box-shadow: var(--shadow-lg);
+}
+
+/* ==========================================
+   Cards & Feature Elements
+   ========================================== */
+.card {
+    border: none;
+    transition: var(--transition);
+}
+
+.feature-card {
+    border-top: 4px solid var(--primary-color);
+}
+
+.feature-card:hover {
+    transform: translateY(-10px);
+    box-shadow: var(--shadow-xl);
+}
+
+.feature-icon {
+    width: 80px;
+    height: 80px;
+    margin: 0 auto 1rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--primary-light), var(--secondary-light));
+}
+
+.feature-icon i {
+    font-size: 2.5rem;
+}
+
+/* ==========================================
+   Team Cards (About Page)
+   ========================================== */
+.team-card {
+    overflow: hidden;
+    transition: var(--transition);
+}
+
+.team-card:hover {
+    transform: translateY(-5px);
+    box-shadow: var(--shadow-xl);
+}
+
+.team-image-container {
+    height: 300px;
+    position: relative;
+    overflow: hidden;
+}
+
+.team-image {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+/* Platzhalter für Bilder wenn nicht vorhanden */
+.placeholder-image {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+}
+
+.placeholder-circle {
+    width: 150px;
+    height: 150px;
+    border-radius: 50%;
+    background-color: var(--white);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 3rem;
+    font-weight: bold;
+    color: var(--primary-color);
+    box-shadow: var(--shadow-xl);
+}
+
+.bg-gradient-blue {
+    background: linear-gradient(135deg, #4F46E5, #6366F1);
+}
+
+.bg-gradient-purple {
+    background: linear-gradient(135deg, #8B5CF6, #A78BFA);
+}
+
+/* ==========================================
+   Portfolio Gallery
+   ========================================== */
+.portfolio-card {
+    overflow: hidden;
+    transition: var(--transition);
+}
+
+.portfolio-card:hover {
+    transform: scale(1.03);
+    box-shadow: var(--shadow-xl);
+}
+
+.portfolio-card img {
+    transition: var(--transition);
+}
+
+.portfolio-card:hover img {
+    transform: scale(1.1);
+}
+
+/* ==========================================
+   Progress Bars (Skills)
+   ========================================== */
+.progress {
+    background-color: #E5E7EB;
+    border-radius: 10px;
+    overflow: hidden;
+}
+
+.progress-bar {
+    background: linear-gradient(90deg, var(--primary-color), var(--secondary-color));
+    transition: width 1s ease-in-out;
+}
+
+/* ==========================================
+   Contact Form
+   ========================================== */
+.contact-item {
+    transition: var(--transition);
+}
+
+.contact-item:hover {
+    transform: translateX(5px);
+}
+
+/* Form Styling */
+.form-control:focus,
+.form-select:focus {
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 0.25rem rgba(79, 70, 229, 0.25);
+}
+
+.form-control.is-invalid:focus,
+.form-select.is-invalid:focus {
+    border-color: var(--error);
+    box-shadow: 0 0 0 0.25rem rgba(239, 68, 68, 0.25);
+}
+
+/* Invalid Feedback Animation */
+.invalid-feedback {
+    animation: shake 0.5s;
+}
+
+@keyframes shake {
+    0%, 100% { transform: translateX(0); }
+    25% { transform: translateX(-10px); }
+    75% { transform: translateX(10px); }
+}
+
+/* Success Message */
+#successMessage {
+    animation: slideDown 0.5s ease-out;
+}
+
+@keyframes slideDown {
+    from {
+        opacity: 0;
+        transform: translateY(-20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* ==========================================
+   Accordion
+   ========================================== */
+.accordion-button {
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+.accordion-button:not(.collapsed) {
+    background-color: var(--primary-light);
+    color: var(--white);
+}
+
+.accordion-button:focus {
+    box-shadow: 0 0 0 0.25rem rgba(79, 70, 229, 0.25);
+}
+
+/* ==========================================
+   Modals
+   ========================================== */
+.modal-content {
+    border: none;
+    box-shadow: var(--shadow-xl);
+}
+
+.modal-header {
+    border-bottom: 2px solid var(--border-color);
+}
+
+.btn-close:focus {
+    box-shadow: 0 0 0 0.25rem rgba(79, 70, 229, 0.25);
+}
+
+/* ==========================================
+   Tables
+   ========================================== */
+.table {
+    margin-bottom: 0;
+}
+
+.table-hover tbody tr {
+    transition: var(--transition);
+}
+
+.table-hover tbody tr:hover {
+    background-color: rgba(79, 70, 229, 0.05);
+}
+
+/* ==========================================
+   Footer
+   ========================================== */
+footer a {
+    transition: var(--transition);
+}
+
+footer a:hover {
+    color: var(--primary-light) !important;
+    transform: translateY(-2px);
+}
+
+/* ==========================================
+   Utility Classes
+   ========================================== */
+.shadow-hover {
+    transition: var(--transition);
+}
+
+.shadow-hover:hover {
+    box-shadow: var(--shadow-xl);
+}
+
+/* ==========================================
+   Responsive Design - Media Queries
+   ========================================== */
+
+/* Tablets und kleinere Desktops */
+@media (max-width: 992px) {
+    .carousel-slide {
+        height: 300px;
+    }
+    
+    .carousel-caption h1 {
+        font-size: 2rem;
+    }
+    
+    .team-image-container {
+        height: 250px;
+    }
+    
+    .placeholder-circle {
+        width: 120px;
+        height: 120px;
+        font-size: 2.5rem;
+    }
+}
+
+/* Mobile Geräte */
+@media (max-width: 768px) {
+    .carousel-slide {
+        height: 250px;
+    }
+    
+    .carousel-caption h1 {
+        font-size: 1.5rem;
+    }
+    
+    .carousel-caption p {
+        font-size: 1rem;
+    }
+    
+    .feature-icon {
+        width: 60px;
+        height: 60px;
+    }
+    
+    .feature-icon i {
+        font-size: 2rem;
+    }
+    
+    .team-image-container {
+        height: 200px;
+    }
+    
+    .placeholder-circle {
+        width: 100px;
+        height: 100px;
+        font-size: 2rem;
+    }
+    
+    /* Verbesserte Touch-Targets für Mobile */
+    .btn {
+        padding: 0.75rem 1.5rem;
+    }
+    
+    .nav-link {
+        padding: 1rem !important;
+    }
+}
+
+/* Sehr kleine Mobile Geräte */
+@media (max-width: 576px) {
+    .display-3,
+    .display-4 {
+        font-size: 2rem;
+    }
+    
+    .lead {
+        font-size: 1rem;
+    }
+    
+    .carousel-slide {
+        height: 200px;
+    }
+    
+    .feature-card {
+        margin-bottom: 1rem;
+    }
+}
+
+/* ==========================================
+   Print Styles
+   ========================================== */
+@media print {
+    .navbar,
+    footer,
+    .btn,
+    .carousel-control-prev,
+    .carousel-control-next {
+        display: none !important;
+    }
+    
+    body {
+        background-color: white;
+    }
+    
+    .card {
+        box-shadow: none;
+        border: 1px solid #ddd;
+    }
+}
+
+/* ==========================================
+   Accessibility Improvements
+   ========================================== */
+
+/* Focus Styles für Tastaturnavigation */
+a:focus,
+button:focus,
+input:focus,
+textarea:focus,
+select:focus {
+    outline: 2px solid var(--primary-color);
+    outline-offset: 2px;
+}
+
+/* Reduced Motion für Nutzer mit Präferenz */
+@media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+    }
+}
+
+/* ==========================================
+   Dark Mode Support (optional)
+   ========================================== */
+@media (prefers-color-scheme: dark) {
+    /* Wird aktiviert wenn System-Dark-Mode aktiv ist */
+    /* Kann nach Bedarf implementiert werden */
+}
