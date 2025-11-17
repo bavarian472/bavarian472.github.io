@@ -25,6 +25,7 @@ document.addEventListener('DOMContentLoaded', function() {
     initCharacterCounter();
     initSmoothScroll();
     initProgressBars();
+    initTeamCardAnimations();
 });
 
 /* ==========================================
@@ -465,19 +466,8 @@ function initProgressBars() {
     const observer = new IntersectionObserver((entries) => {
         entries.forEach(entry => {
             if (entry.isIntersecting) {
-                const progressBar = entry.target;
-                const targetWidth = progressBar.style.width;
-                
-                // Setze initiale Breite auf 0
-                progressBar.style.width = '0';
-                
-                // Animiere zur Zielbreite
-                setTimeout(() => {
-                    progressBar.style.width = targetWidth;
-                }, 100);
-                
-                // Beobachte Element nicht mehr
-                observer.unobserve(progressBar);
+                entry.target.style.animation = 'fillProgress 1.5s ease-out forwards';
+                observer.unobserve(entry.target);
             }
         });
     }, {
@@ -486,6 +476,46 @@ function initProgressBars() {
     
     // Beobachte alle Progress Bars
     progressBars.forEach(bar => observer.observe(bar));
+}
+
+/**
+ * Initialisiert Team Card Animationen
+ */
+function initTeamCardAnimations() {
+    const teamCards = document.querySelectorAll('.team-card');
+    
+    const observer = new IntersectionObserver((entries) => {
+        entries.forEach((entry, index) => {
+            if (entry.isIntersecting) {
+                // Verzögerte Animation für jeden Card
+                setTimeout(() => {
+                    entry.target.style.opacity = '0';
+                    entry.target.style.transform = 'translateY(30px)';
+                    
+                    // Trigger animation
+                    entry.target.offsetHeight;
+                    entry.target.style.animation = `slideInUp 0.8s ease-out forwards`;
+                }, index * 100);
+                
+                observer.unobserve(entry.target);
+            }
+        });
+    }, {
+        threshold: 0.1
+    });
+    
+    teamCards.forEach(card => observer.observe(card));
+}
+
+@keyframes slideInUp {
+    from {
+        opacity: 0;
+        transform: translateY(30px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
 }
 
 /* ==========================================
