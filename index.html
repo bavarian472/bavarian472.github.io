@@ -83,11 +83,13 @@
 
     <!-- Dynamische Begrüßung (Interaktives Element 2 - JavaScript) -->
     <div class="container mt-5">
-        <div class="card shadow-lg border-0">
+        <div class="card shadow-lg border-0 greeting-card">
             <div class="card-body p-4">
                 <div class="d-flex align-items-center">
-                    <i class="bi bi-clock-history text-primary fs-1 me-3"></i>
-                    <div>
+                    <div class="greeting-icon">
+                        <i class="bi bi-clock-history"></i>
+                    </div>
+                    <div class="flex-grow-1">
                         <h2 class="mb-1" id="greeting">Willkommen!</h2>
                         <p class="text-muted mb-0">Aktuelle Zeit: <span id="current-time"></span></p>
                     </div>
@@ -111,10 +113,11 @@
         <!-- Feature Cards (Grid-System) -->
         <div class="row g-4">
             <div class="col-md-4">
-                <div class="card h-100 shadow-sm feature-card">
-                    <div class="card-body text-center">
+                <div class="card h-100 shadow-sm feature-card feature-card-1">
+                    <div class="feature-card-gradient"></div>
+                    <div class="card-body text-center position-relative">
                         <div class="feature-icon">
-                            <i class="bi bi-lightbulb text-primary"></i>
+                            <i class="bi bi-lightbulb"></i>
                         </div>
                         <h4 class="card-title">Kreativität</h4>
                         <p class="card-text text-muted">
@@ -124,10 +127,11 @@
                 </div>
             </div>
             <div class="col-md-4">
-                <div class="card h-100 shadow-sm feature-card">
-                    <div class="card-body text-center">
+                <div class="card h-100 shadow-sm feature-card feature-card-2">
+                    <div class="feature-card-gradient"></div>
+                    <div class="card-body text-center position-relative">
                         <div class="feature-icon">
-                            <i class="bi bi-people text-primary"></i>
+                            <i class="bi bi-people"></i>
                         </div>
                         <h4 class="card-title">Teamwork</h4>
                         <p class="card-text text-muted">
@@ -137,10 +141,11 @@
                 </div>
             </div>
             <div class="col-md-4">
-                <div class="card h-100 shadow-sm feature-card">
-                    <div class="card-body text-center">
+                <div class="card h-100 shadow-sm feature-card feature-card-3">
+                    <div class="feature-card-gradient"></div>
+                    <div class="card-body text-center position-relative">
                         <div class="feature-icon">
-                            <i class="bi bi-lightning text-primary"></i>
+                            <i class="bi bi-lightning"></i>
                         </div>
                         <h4 class="card-title">Performance</h4>
                         <p class="card-text text-muted">
@@ -279,16 +284,18 @@
 
     <!-- Call to Action -->
     <div class="container my-5">
-        <div class="card bg-primary text-white">
-            <div class="card-body text-center p-5">
-                <h3 class="card-title">Lernen Sie uns kennen!</h3>
-                <p class="card-text mb-4">Erfahren Sie mehr über unser Team und unsere Kompetenzen</p>
-                <a href="about.html" class="btn btn-light btn-lg me-2">
-                    <i class="bi bi-people-fill"></i> Über uns
-                </a>
-                <a href="contact.html" class="btn btn-outline-light btn-lg">
-                    <i class="bi bi-envelope"></i> Kontakt
-                </a>
+        <div class="card border-0 shadow-lg cta-card">
+            <div class="card-body text-center p-5 text-white">
+                <h3 class="card-title mb-3">Lernen Sie uns kennen!</h3>
+                <p class="card-text mb-4 lead">Erfahren Sie mehr über unser Team und unsere Kompetenzen</p>
+                <div class="d-grid gap-2 d-sm-flex justify-content-sm-center">
+                    <a href="about.html" class="btn btn-light btn-lg px-4">
+                        <i class="bi bi-people-fill"></i> Über uns
+                    </a>
+                    <a href="contact.html" class="btn btn-outline-light btn-lg px-4">
+                        <i class="bi bi-envelope"></i> Kontakt
+                    </a>
+                </div>
             </div>
         </div>
     </div>
