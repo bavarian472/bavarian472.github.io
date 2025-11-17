@@ -179,30 +179,165 @@ a {
 .card {
     border: none;
     transition: var(--transition);
+    border-radius: 12px;
 }
 
+/* Greeting Card */
+.greeting-card {
+    background: linear-gradient(135deg, rgba(79, 70, 229, 0.05), rgba(139, 92, 246, 0.05));
+    border: 1px solid rgba(79, 70, 229, 0.1);
+    animation: slideInDown 0.8s ease-out;
+}
+
+.greeting-icon {
+    width: 70px;
+    height: 70px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 2rem;
+    color: white;
+    margin-right: 1.5rem;
+    animation: float 3s ease-in-out infinite;
+    flex-shrink: 0;
+}
+
+@keyframes slideInDown {
+    from {
+        opacity: 0;
+        transform: translateY(-30px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Feature Cards */
 .feature-card {
     border-top: 4px solid var(--primary-color);
+    position: relative;
+    overflow: hidden;
+    border-radius: 12px;
+    transition: var(--transition);
+}
+
+.feature-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(135deg, rgba(79, 70, 229, 0.05), rgba(139, 92, 246, 0.05));
+    opacity: 0;
+    transition: var(--transition);
+    z-index: 0;
 }
 
 .feature-card:hover {
-    transform: translateY(-10px);
-    box-shadow: var(--shadow-xl);
+    transform: translateY(-8px);
+    box-shadow: 0 20px 40px -10px rgba(79, 70, 229, 0.2);
+    border-top-color: var(--secondary-color);
+}
+
+.feature-card:hover::before {
+    opacity: 1;
+}
+
+.feature-card-gradient {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 4px;
+    background: linear-gradient(90deg, var(--primary-color), var(--secondary-color), var(--accent-color));
+    animation: shimmer 3s infinite;
+}
+
+@keyframes shimmer {
+    0% {
+        background-position: -1000px 0;
+    }
+    100% {
+        background-position: 1000px 0;
+    }
+}
+
+.feature-card-1 {
+    border-top-color: var(--primary-color);
+}
+
+.feature-card-1:hover {
+    border-top-color: #818CF8;
+}
+
+.feature-card-2 {
+    border-top-color: var(--secondary-color);
+}
+
+.feature-card-2:hover {
+    border-top-color: #A78BFA;
+}
+
+.feature-card-3 {
+    border-top-color: var(--accent-color);
+}
+
+.feature-card-3:hover {
+    border-top-color: #F472B6;
 }
 
 .feature-icon {
-    width: 80px;
-    height: 80px;
+    width: 70px;
+    height: 70px;
     margin: 0 auto 1rem;
     display: flex;
     align-items: center;
     justify-content: center;
     border-radius: 50%;
     background: linear-gradient(135deg, var(--primary-light), var(--secondary-light));
+    transition: var(--transition);
+    font-size: 2.2rem;
+    color: white;
 }
 
-.feature-icon i {
-    font-size: 2.5rem;
+.feature-card:hover .feature-icon {
+    transform: scale(1.1) rotate(10deg);
+    box-shadow: 0 10px 30px -5px rgba(79, 70, 229, 0.4);
+}
+
+/* CTA Card */
+.cta-card {
+    background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+    position: relative;
+    overflow: hidden;
+    border-radius: 16px;
+}
+
+.cta-card::before {
+    content: '';
+    position: absolute;
+    top: -50%;
+    right: -50%;
+    width: 200%;
+    height: 200%;
+    background: radial-gradient(circle, rgba(255, 255, 255, 0.1) 1px, transparent 1px);
+    background-size: 20px 20px;
+    animation: moveGradient 20s linear infinite;
+    opacity: 0.5;
+}
+
+.cta-card .card-body {
+    position: relative;
+    z-index: 1;
+}
+
+.cta-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 30px 60px -10px rgba(79, 70, 229, 0.3);
 }
 
 /* ==========================================
@@ -211,11 +346,340 @@ a {
 .team-card {
     overflow: hidden;
     transition: var(--transition);
+    border-radius: 12px;
+    position: relative;
+}
+
+.team-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(135deg, rgba(79, 70, 229, 0.1), rgba(139, 92, 246, 0.1));
+    opacity: 0;
+    transition: var(--transition);
+    z-index: -1;
 }
 
 .team-card:hover {
+    transform: translateY(-10px) scale(1.02);
+    box-shadow: 0 25px 50px -12px rgba(79, 70, 229, 0.3);
+}
+
+.team-card:hover::before {
+    opacity: 1;
+}
+
+.team-card-header {
+    display: flex;
+    align-items: center;
+    padding: 2rem;
+    position: relative;
+    overflow: hidden;
+}
+
+.team-card-header::before {
+    content: '';
+    position: absolute;
+    top: -50%;
+    right: -50%;
+    width: 200%;
+    height: 200%;
+    background: radial-gradient(circle, rgba(255, 255, 255, 0.1) 1px, transparent 1px);
+    background-size: 20px 20px;
+    animation: moveGradient 20s linear infinite;
+}
+
+@keyframes moveGradient {
+    0% {
+        transform: translate(0, 0);
+    }
+    100% {
+        transform: translate(20px, 20px);
+    }
+}
+
+.team-avatar {
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.2);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 2.5rem;
+    margin-right: 1.5rem;
+    border: 3px solid rgba(255, 255, 255, 0.3);
+    animation: float 3s ease-in-out infinite;
+    position: relative;
+    z-index: 1;
+}
+
+@keyframes float {
+    0%, 100% {
+        transform: translateY(0px);
+    }
+    50% {
+        transform: translateY(-10px);
+    }
+}
+
+.team-info {
+    position: relative;
+    z-index: 1;
+}
+
+.team-info h3 {
+    font-weight: 700;
+    letter-spacing: 0.5px;
+}
+
+.team-info p {
+    font-size: 0.9rem;
+    font-weight: 500;
+    opacity: 0.95;
+}
+
+/* Skills Progress Bars */
+.skills-container {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.skill-item {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.skill-name {
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: var(--text-primary);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.progress-skill {
+    height: 8px;
+    background-color: #E5E7EB;
+    border-radius: 10px;
+    overflow: hidden;
+    position: relative;
+}
+
+.progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--primary-color), var(--secondary-color));
+    border-radius: 10px;
+    animation: fillProgress 1.5s ease-out forwards;
+    box-shadow: 0 0 10px rgba(79, 70, 229, 0.3);
+}
+
+@keyframes fillProgress {
+    from {
+        width: 0 !important;
+        opacity: 0;
+    }
+    to {
+        opacity: 1;
+    }
+}
+
+.team-card:hover .progress-fill {
+    box-shadow: 0 0 15px rgba(79, 70, 229, 0.5);
+}
+
+.quote-text {
+    font-style: italic;
+    transition: var(--transition);
+    display: block;
+    padding: 0.5rem;
+    border-left: 3px solid var(--primary-color);
+    padding-left: 1rem;
+    margin-left: -1rem;
+}
+
+.team-card:hover .quote-text {
+    padding-left: 1.5rem;
+    border-left-color: var(--secondary-color);
+}
+
+/* Interest Badges */
+.interests-container {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+}
+
+.interest-badge {
+    display: inline-block;
+    padding: 0.5rem 1rem;
+    background: linear-gradient(135deg, rgba(79, 70, 229, 0.1), rgba(139, 92, 246, 0.1));
+    border: 1px solid rgba(79, 70, 229, 0.3);
+    border-radius: 20px;
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: var(--text-primary);
+    transition: var(--transition);
+}
+
+.interest-badge:hover {
+    background: linear-gradient(135deg, rgba(79, 70, 229, 0.2), rgba(139, 92, 246, 0.2));
+    border-color: var(--primary-color);
+    transform: translateY(-2px);
+}
+
+/* Reason Cards */
+.reason-card {
+    padding: 1.5rem;
+    transition: var(--transition);
+    border-radius: 8px;
+}
+
+.reason-card:hover {
+    background: linear-gradient(135deg, rgba(79, 70, 229, 0.05), rgba(139, 92, 246, 0.05));
     transform: translateY(-5px);
-    box-shadow: var(--shadow-xl);
+}
+
+.reason-card h5 {
+    font-weight: 600;
+    color: var(--text-primary);
+    margin-bottom: 0.75rem;
+}
+
+/* Interest Cards */
+.interest-card {
+    border: 1px solid rgba(79, 70, 229, 0.15);
+    background: linear-gradient(135deg, rgba(79, 70, 229, 0.02), rgba(139, 92, 246, 0.02));
+    transition: var(--transition);
+}
+
+.interest-card:hover {
+    border-color: var(--primary-color);
+    background: linear-gradient(135deg, rgba(79, 70, 229, 0.08), rgba(139, 92, 246, 0.08));
+    transform: translateY(-5px);
+    box-shadow: 0 15px 40px -10px rgba(79, 70, 229, 0.15);
+}
+
+/* CV Section */
+.cv-section {
+    border-top: 2px solid var(--border-color);
+    padding-top: 1rem;
+}
+
+.cv-title {
+    font-weight: 700;
+    color: var(--text-primary);
+    margin-bottom: 1rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.cv-title i {
+    color: var(--primary-color);
+}
+
+.cv-content {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+.cv-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.5rem 0;
+    border-bottom: 1px solid rgba(79, 70, 229, 0.1);
+}
+
+.cv-item:last-child {
+    border-bottom: none;
+}
+
+.cv-label {
+    font-weight: 600;
+    color: var(--primary-color);
+    font-size: 0.85rem;
+}
+
+.cv-value {
+    color: var(--text-secondary);
+    font-size: 0.9rem;
+    text-align: right;
+}
+
+/* Story Card */
+.story-card {
+    background: linear-gradient(135deg, rgba(79, 70, 229, 0.03), rgba(139, 92, 246, 0.03));
+    border: 1px solid rgba(79, 70, 229, 0.15);
+    border-radius: 12px;
+}
+
+.story-card h2 {
+    color: var(--text-primary);
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.story-card p {
+    line-height: 1.8;
+}
+
+.timeline-highlight {
+    background: linear-gradient(135deg, rgba(16, 185, 129, 0.1), rgba(16, 185, 129, 0.05));
+    border-left: 4px solid var(--success);
+    border-radius: 8px;
+    color: var(--text-primary);
+    font-weight: 500;
+}
+
+/* ==========================================
+   Rituals Section
+   ========================================== */
+.rituals-section {
+    --card-bg: linear-gradient(135deg, rgba(79, 70, 229, 0.02), rgba(139, 92, 246, 0.02));
+}
+
+.ritual-card {
+    border-radius: 12px;
+    border: 1px solid rgba(79, 70, 229, 0.08);
+    background: var(--card-bg);
+    transition: var(--transition);
+}
+
+.ritual-card:hover {
+    transform: translateY(-6px);
+    box-shadow: 0 20px 50px -15px rgba(79, 70, 229, 0.15);
+    border-color: var(--primary-color);
+}
+
+.ritual-icon {
+    width: 80px;
+    height: 80px;
+    margin: 0 auto;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--primary-light), var(--secondary-light));
+    color: white;
+}
+
+.ritual-card h5 {
+    font-weight: 700;
+}
+
+.ritual-card p {
+    color: var(--text-secondary);
 }
 
 .team-image-container {
@@ -261,10 +725,6 @@ a {
 .bg-gradient-purple {
     background: linear-gradient(135deg, #8B5CF6, #A78BFA);
 }
-
-/* ==========================================
-   Portfolio Gallery
-   ========================================== */
 .portfolio-card {
     overflow: hidden;
     transition: var(--transition);
